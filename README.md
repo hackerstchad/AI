@@ -1,8 +1,7 @@
 
 [README_AI_GROUPE.md](https://github.com/user-attachments/files/30650846/README_AI_GROUPE.md)
-<p align="center">
-  <img src="https://readme-typing-svg.demolab.com?font=Orbitron&size=35&duration=3000&pause=1000&color=00F7FF&center=true&vCenter=true&width=900&lines=AI-GROUPE;Alliance+Intelligence+Artificielle;Plus+de+1000+outils+et+menus;Génération+d'images+gratuite;Crédits+%26+Ressources+IA" alt="AI-GROUPE Typing" />
-</p>
+<img width="3082" height="3335" alt="about" src="https://github.com/user-attachments/assets/95de0159-49ca-448b-ba64-0b962e732734" />
+
 
 <p align="center">
   <a href="#"><img src="https://img.shields.io/badge/AI--GROUPE-v1.0.0-00F7FF?style=for-the-badge&logo=artificial-intelligence&logoColor=white"></a>
