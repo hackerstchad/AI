@@ -1,90 +1,5 @@
 
-[README_AI_GROUPE.md](https://github.com/user-attachments/files/30650846/README_AI_GROUPE.md)
 <img width="3082" height="3335" alt="about" src="https://github.com/user-attachments/assets/95de0159-49ca-448b-ba64-0b962e732734" />
-
-
-<p align="center">
-  <a href="#"><img src="https://img.shields.io/badge/AI--GROUPE-v1.0.0-00F7FF?style=for-the-badge&logo=artificial-intelligence&logoColor=white"></a>
-  <a href="#"><img src="https://img.shields.io/badge/Menus-1000%2B-success?style=for-the-badge"></a>
-  <a href="#"><img src="https://img.shields.io/badge/IA%20Images-50%2B%20outils-purple?style=for-the-badge"></a>
-  <a href="#"><img src="https://img.shields.io/badge/Open%20Source-100%25-blue?style=for-the-badge"></a>
-  <a href="#"><img src="https://img.shields.io/badge/Crédits-200%2B-orange?style=for-the-badge"></a>
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/Python-3.8%2B-blue?style=flat-square&logo=python">
-  <img src="https://img.shields.io/badge/Markdown-Documentation-000000?style=flat-square&logo=markdown">
-  <img src="https://img.shields.io/badge/AI-Tools-ff69b4?style=flat-square">
-  <img src="https://img.shields.io/badge/Images-Gratuit-green?style=flat-square">
-</p>
-
----
-
-## 🌍 Présentation
-
-**AI-GROUPE** est un **répertoire avancé et stylisé** regroupant :
-- **Plus de 1000 menus, outils et ressources** autour de l'intelligence artificielle.
-- **Plus de 50 générateurs d'images IA gratuits** avec liens directs.
-- Des **crédits complets** aux créateurs, modèles, frameworks et communautés.
-- Des **prompts optimisés** pour la création visuelle.
-- Une **documentation structurée** pour développeurs, designers, chercheurs et passionnés.
-
-> 🎯 **Mission** : centraliser, organiser et partager les meilleures ressources IA gratuites et éthiques pour la communauté francophone et internationale.
-
----
-
-## ⚠️ Avertissement Éthique
-
-```diff
-- AI-GROUPE promeut une utilisation ÉTHIQUE et RESPONSABLE de l'IA.
-- Ne générez jamais de contenu illégal, diffamatoire, haineux ou violant la vie privée.
-- Respectez les droits d'auteur et les conditions d'utilisation de chaque outil.
-- Les crédits aux artistes, développeurs et chercheurs sont essentiels.
-```
-
----
-
-## 📦 Installation du Projet (si script Python associé)
-
-```bash
-# Cloner le dépôt
-cd ai-groupe
-
-# Créer l'environnement virtuel
-python3 -m venv venv
-source venv/bin/activate        # Linux / macOS
-# venv\Scripts\activate         # Windows
-
-# Installer les dépendances
-pip install -r requirements.txt
-
-# Lancer le menu interactif
-python3 ai_groupe.py
-```
-
----
-
-## 🚀 Lancement Rapide
-
-### Mode interactif
-
-```bash
-python3 ai_groupe.py
-```
-
-### Mode CLI
-
-```bash
-python3 ai_groupe.py --category images --tool 1
-python3 ai_groupe.py --category text --tool 5
-python3 ai_groupe.py --search "image generator"
-```
-
----
-
-## 📂 Structure des 1000+ Menus
-
-AI-GROUPE organise ses ressources en **20 catégories principales**, chacune contenant **50+ outils ou options**, avec sous-menus dynamiques.
 
 | # | Catégorie | Menus estimés | Description |
 |---|-----------|---------------|-------------|
@@ -398,8 +313,8 @@ copies or substantial portions of the Software.
 ## 📞 Contact & Communauté
 
 - 🐦 Twitter/X : `@HackerTchadien`
-- 💬 Telegram : `AI_GROUPE_Community`
-- 📧 Email : `contact@aigroupe.td`
+- 💬 Telegram : `HIDDEN-WORLD`
+- 📧 Email : `abd736988@gmail.com`
 - 🌐 Site web : `https://aigroupe.td`
 
 <p align="center">
