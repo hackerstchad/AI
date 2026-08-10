@@ -1,6 +1,8 @@
 Ai groupes
 <img width="1248" height="832" alt="OIG4" src="https://github.com/user-attachments/assets/d3c3ae28-d6c8-4e48-ae41-3a5d8481c176" />
-ICI TOUT LES MODEL ia
+
+ICI TOUT LES MODEL AI EXEISTE DANS LE MONDE
+
 <img width="3082" height="3335" alt="about" src="https://github.com/user-attachments/assets/95de0159-49ca-448b-ba64-0b962e732734" />
 
 | # | Catégorie | Menus estimés | Description |
