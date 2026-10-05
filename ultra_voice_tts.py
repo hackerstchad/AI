@@ -1031,6 +1031,52 @@ class UltraVoiceApp:
     def _build_controls(self, parent: Frame):
         pad = {"padx": 15, "pady": 10}
 
+        # ===== Bouton principal de génération / lecture (EN HAUT) =====
+        gen_frame = Frame(parent, bg=self.SECONDARY_COLOR)
+        gen_frame.pack(fill="x", padx=15, pady=(15, 5))
+        self.speak_btn = Button(
+            gen_frame,
+            text="▶ GÉNÉRER & LIRE",
+            bg=self.SUCCESS_COLOR,
+            fg=self.BG_COLOR,
+            font=(self.FONT_FAMILY, 14, "bold"),
+            bd=0,
+            relief="flat",
+            height=2,
+            command=self._on_speak,
+        )
+        self.speak_btn.pack(fill="x", pady=5)
+
+        # Sous-boutons rapides
+        quick_frame = Frame(gen_frame, bg=self.SECONDARY_COLOR)
+        quick_frame.pack(fill="x")
+        self.save_btn = Button(
+            quick_frame,
+            text="💾 Sauver",
+            bg=self.ACCENT_COLOR,
+            fg=self.BG_COLOR,
+            font=(self.FONT_FAMILY, 10, "bold"),
+            bd=0,
+            relief="flat",
+            command=self._on_save,
+        )
+        self.save_btn.pack(side=LEFT, fill="x", expand=True, padx=(0, 5))
+        self.stop_btn = Button(
+            quick_frame,
+            text="⏹ Stop",
+            bg=self.ERROR_COLOR,
+            fg=self.BG_COLOR,
+            font=(self.FONT_FAMILY, 10, "bold"),
+            bd=0,
+            relief="flat",
+            command=self._on_stop,
+        )
+        self.stop_btn.pack(side=RIGHT, fill="x", expand=True, padx=(5, 0))
+
+        # Séparateur visuel
+        sep = Frame(parent, bg=self.BG_COLOR, height=2)
+        sep.pack(fill="x", padx=15, pady=10)
+
         # Moteur
         Label(parent, text="Moteur TTS", bg=self.SECONDARY_COLOR, fg=self.ACCENT_COLOR, font=(self.FONT_FAMILY, 11, "bold")).pack(anchor="w", **pad)
         self.engine_var = StringVar(value=ENGINE_PYTTSX3)
@@ -1086,43 +1132,6 @@ class UltraVoiceApp:
                 anchor="w",
             )
             cb.pack(fill="x", padx=5, pady=2)
-
-        # Boutons d'action
-        btn_frame = Frame(parent, bg=self.SECONDARY_COLOR)
-        btn_frame.pack(fill="x", padx=15, pady=20)
-        self.speak_btn = Button(
-            btn_frame,
-            text="▶ Lire",
-            bg=self.SUCCESS_COLOR,
-            fg=self.BG_COLOR,
-            font=(self.FONT_FAMILY, 12, "bold"),
-            bd=0,
-            relief="flat",
-            command=self._on_speak,
-        )
-        self.speak_btn.pack(fill="x", pady=5)
-        self.save_btn = Button(
-            btn_frame,
-            text="💾 Sauvegarder WAV",
-            bg=self.ACCENT_COLOR,
-            fg=self.BG_COLOR,
-            font=(self.FONT_FAMILY, 11, "bold"),
-            bd=0,
-            relief="flat",
-            command=self._on_save,
-        )
-        self.save_btn.pack(fill="x", pady=5)
-        self.stop_btn = Button(
-            btn_frame,
-            text="⏹ Arrêter",
-            bg=self.ERROR_COLOR,
-            fg=self.BG_COLOR,
-            font=(self.FONT_FAMILY, 11, "bold"),
-            bd=0,
-            relief="flat",
-            command=self._on_stop,
-        )
-        self.stop_btn.pack(fill="x", pady=5)
 
     def _build_text_area(self, parent: Frame):
         Label(parent, text="Texte à synthétiser", bg=self.BG_COLOR, fg=self.ACCENT_COLOR, font=(self.FONT_FAMILY, 12, "bold"), anchor="w").pack(fill="x", pady=(0, 10))
