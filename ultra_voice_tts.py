@@ -1,1409 +1,1207 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-╔══════════════════════════════════════════════════════════════════════════════╗
-║                                                                              ║
-║   ██╗   ██╗██╗  ████████╗██████╗  █████╗     ██╗   ██╗ ██████╗ ██╗ ██████╗   ║
-║   ██║   ██║██║  ╚══██╔══╝██╔══██╗██╔══██╗    ██║   ██║██╔═══██╗██║██╔════╝   ║
-║   ██║   ██║██║     ██║   ██████╔╝██║  ██║    ██║   ██║██║   ██║██║██║        ║
-║   ██║   ██║██║     ██║   ██╔══██╗██║  ██║    ╚██╗ ██╔╝██║   ██║██║██║        ║
-║   ╚██████╔╝███████╗██║   ██║  ██║╚█████╔╝     ╚████╔╝ ╚██████╔╝██║╚██████╗   ║
-║    ╚═════╝ ╚══════╝╚═╝   ╚═╝  ╚═╝ ╚════╝       ╚═══╝   ╚═════╝ ╚═╝ ╚═════╝   ║
-║                                                                              ║
-║                 U L T R A   V O I C E   T T S  —  v2.0.0                     ║
-║                                                                              ║
-║   Synthèse vocale avancée, multi-moteurs, 100% gratuite et offline-capable.  ║
-║   Interface Tkinter stylisée avec effets audio, Voice Activity Detection,    ║
-║   normalisation du texte, prévisualisation, export WAV/MP3, et plus.         ║
-║                                                                              ║
-╚══════════════════════════════════════════════════════════════════════════════╝
+╔══════════════════════════════════════════════════════════════════════════════════╗
+║                                                                                  ║
+║    ██████╗ ███████╗ ██████╗ ██████╗ ██████╗ ████████╗    ██████╗ ██████╗       ║
+║   ██╔════╝ ██╔════╝██╔═══██╗██╔══██╗██╔══██╗╚══██╔══╝    ██╔══██╗╚════██╗      ║
+║   ██║  ███╗█████╗  ██║   ██║██║  ██║██████╔╝   ██║       ██████╔╝  ▄███╔╝      ║
+║   ██║   ██║██╔══╝  ██║   ██║██║  ██║██╔══██╗   ██║       ██╔══██╗  ▀▀══╝       ║
+║   ╚██████╔╝███████╗╚██████╔╝██████╔╝██║  ██║   ██║       ██║  ██║  ██╗         ║
+║    ╚═════╝ ╚══════╝ ╚═════╝ ╚═════╝ ╚═╝  ╚═╝   ╚═╝       ╚═╝  ╚═╝  ╚═╝         ║
+║                                                                                  ║
+║          G E O 3 D   M A S T E R   -   E S P A C E   G É O M É T R I Q U E      ║
+║                                                                                  ║
+║   Version  : 1.0.0                                                               ║
+║   Auteur   : hackers_tchad 🇹🇩                                                    ║
+║   Objectif : Visualisation 3D géométrique interactive et éducative               ║
+║                                                                                  ║
+╚══════════════════════════════════════════════════════════════════════════════════╝
 
-SOMMAIRE
---------
-1. Configuration et constantes
-2. Utilitaires linguistiques (normalisation, phonèmes, SSML)
-3. Moteurs TTS (pyttsx3, gTTS, Coqui TTS, espeak)
-4. Post-traitement audio (normalisation, VAD, reverb, égalisation)
-5. Pipeline de synthèse unifiée
-6. Interface Tkinter avancée
-7. Point d'entrée __main__
-
-UTILISATION RAPIDE
-------------------
-    # Interface graphique
-    python ultra_voice_tts.py
-
-    # Utilisation programmatique
-    from ultra_voice_tts import UltraVoiceTTS
-    tts = UltraVoiceTTS()
-    tts.speak("Bonjour le monde", engine="pyttsx3")
-    tts.save("sortie.wav", "Bonjour le monde", engine="coqui")
+⚠️  AVERTISSEMENT : Cet outil est un simulateur éducatif de visualisation 3D.
+    Il ne peut pas "voir" l'utilisateur sans caméra active et explicite.
+    Si une caméra est utilisée, c'est uniquement avec le consentement de
+    l'utilisateur et à des fins pédagogiques. Aucune capture ni stockage
+    d'image réelle n'est effectué sans permission.
 """
 
-from __future__ import annotations
-
-import argparse
-import io
-import json
 import os
-import platform
-import re
-import shutil
 import sys
-import tempfile
-import threading
 import time
-import traceback
-import wave
-import warnings
-from dataclasses import dataclass, field
-from pathlib import Path
-from queue import Empty, Queue
-from threading import Lock, Thread
-from tkinter import (
-    BOTH,
-    BOTTOM,
-    CENTER,
-    DISABLED,
-    END,
-    HORIZONTAL,
-    LEFT,
-    NORMAL,
-    RIGHT,
-    TOP,
-    BooleanVar,
-    Button,
-    Checkbutton,
-    DoubleVar,
-    Entry,
-    Frame,
-    Label,
-    Listbox,
-    Menu,
-    Message,
-    OptionMenu,
-    Scale,
-    Scrollbar,
-    StringVar,
-    Text,
-    Tk,
-    Toplevel,
-    filedialog,
-    messagebox,
-    scrolledtext,
-    ttk,
-)
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
+import math
+import json
+import random
+import shutil
+import socket
+import getpass
+import argparse
+import datetime
+from collections import defaultdict
 
-# Suppression des warnings non critiques pour une UI propre
-warnings.filterwarnings("ignore", category=FutureWarning)
-warnings.filterwarnings("ignore", category=UserWarning)
+# Imports optionnels avec fallback
 
+try:
+    import numpy as np
+except ImportError:
+    np = None
 
-# =============================================================================
-# 1. CONFIGURATION ET CONSTANTES
-# =============================================================================
+try:
+    import matplotlib.pyplot as plt
+    from mpl_toolkits.mplot3d import Axes3D
+    from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+except ImportError:
+    plt = None
 
-APP_NAME = "Ultra Voice TTS"
-APP_VERSION = "2.0.0"
-APP_AUTHOR = "CodePal"
+try:
+    from colorama import init, Fore, Style, Back
+    init(autoreset=True)
+except ImportError:
+    class _DummyColor:
+        def __getattr__(self, name):
+            return ''
+    Fore = Style = Back = _DummyColor()
 
-# Répertoire de cache cross-platform
-CACHE_DIR = Path.home() / ".cache" / "ultra_voice_tts"
-CACHE_DIR.mkdir(parents=True, exist_ok=True)
-
-# Dossier temporaire dédié
-TEMP_DIR = Path(tempfile.gettempdir()) / "ultra_voice_tts"
-TEMP_DIR.mkdir(parents=True, exist_ok=True)
-
-# Paramètres audio par défaut
-DEFAULT_SAMPLE_RATE = 22050
-DEFAULT_BITRATE = "192k"
-
-# Moteurs TTS supportés
-ENGINE_PYTTSX3 = "pyttsx3"
-ENGINE_GTTS = "gTTS"
-ENGINE_COQUI = "coqui"
-ENGINE_ESPEAK = "espeak"
-ENGINE_SYSTEM = "system"
-
-ALL_ENGINES = [ENGINE_PYTTSX3, ENGINE_GTTS, ENGINE_COQUI, ENGINE_ESPEAK, ENGINE_SYSTEM]
-
-# Langues supportées par gTTS (sous-ensemble courant)
-GTTS_LANGUAGES = {
-    "fr": "Français",
-    "en": "English",
-    "es": "Español",
-    "de": "Deutsch",
-    "it": "Italiano",
-    "pt": "Português",
-    "nl": "Nederlands",
-    "ru": "Русский",
-    "ja": "日本語",
-    "zh": "中文",
-    "ar": "العربية",
-    "ko": "한국어",
-    "pl": "Polski",
-    "tr": "Türkçe",
-    "sv": "Svenska",
-}
-
-# Effets audio disponibles
-EFFECTS = {
-    "normalize": "Normalisation RMS",
-    "vad_trim": "Suppression silences (VAD)",
-    "eq": "Égalisation simple",
-    "speed": "Ajustement vitesse",
-    "pitch": "Ajustement hauteur",
-    "reverb": "Réverbération légère",
-    "chorus": "Chorus doux",
-}
-
-
-# =============================================================================
-# 2. UTILITAIRES LINGUISTIQUES
-# =============================================================================
-
-class TextNormalizer:
-    """Normalise et enrichit un texte brut pour une meilleure synthèse vocale."""
-
-    # Abbréviations courantes en français et anglais
-    ABBREVIATIONS: Dict[str, Dict[str, str]] = {
-        "fr": {
-            "M.": "Monsieur",
-            "Mme": "Madame",
-            "Mlle": "Mademoiselle",
-            "Dr": "Docteur",
-            "Pr": "Professeur",
-            "Mme.": "Madame",
-            "M.": "Monsieur",
-            "p. ex.": "par exemple",
-            "c.-à-d.": "c'est-à-dire",
-            "Mme": "Madame",
-            "Mlle": "Mademoiselle",
-            "Mr": "Monsieur",
-            "etc.": "et cætera",
-            "1er": "premier",
-            "1re": "première",
-            "2e": "deuxième",
-            "3e": "troisième",
-        },
-        "en": {
-            "Mr.": "Mister",
-            "Mrs.": "Misses",
-            "Ms.": "Miz",
-            "Dr.": "Doctor",
-            "Prof.": "Professor",
-            "St.": "Saint",
-            "Ave.": "Avenue",
-            "Blvd.": "Boulevard",
-            "etc.": "et cetera",
-        },
-    }
-
-    # Ponctuation et pauses
-    PAUSE_MAP = {
-        ".": "<break time=\"500ms\"/>",
-        ";": "<break time=\"400ms\"/>",
-        ":": "<break time=\"300ms\"/>",
-        "!": "<break time=\"500ms\"/>",
-        "?": "<break time=\"500ms\"/>",
-        ",": "<break time=\"200ms\"/>",
-    }
-
-    @classmethod
-    def expand_abbreviations(cls, text: str, lang: str = "fr") -> str:
-        """Développe les abbréviations courantes."""
-        mapping = cls.ABBREVIATIONS.get(lang, cls.ABBREVIATIONS["en"])
-        for abbr, full in mapping.items():
-            text = re.sub(r"\b" + re.escape(abbr) + r"\b", full, text, flags=re.IGNORECASE)
-        return text
-
-    @classmethod
-    def numbers_to_words(cls, text: str, lang: str = "fr") -> str:
-        """Convertit les nombres en mots quand c'est possible."""
-        try:
-            import num2words
-        except ImportError:
-            return text
-
-        def replace_num(match: re.Match) -> str:
-            num_str = match.group(0)
-            try:
-                # Gestion simple des nombres entiers
-                if "," in num_str or "." in num_str:
-                    return num_str
-                return num2words.num2words(int(num_str), lang=lang)
-            except Exception:
-                return num_str
-
-        return re.sub(r"\b\d+\b", replace_num, text)
-
-    @classmethod
-    def normalize_whitespace(cls, text: str) -> str:
-        """Supprime les espaces multiples et les retours à la ligne parasites."""
-        text = re.sub(r"\s+", " ", text)
-        text = text.replace("\n", " ").replace("\r", " ")
-        return text.strip()
-
-    @classmethod
-    def clean_text(cls, text: str, lang: str = "fr") -> str:
-        """Pipeline complet de normalisation."""
-        if not text:
-            return ""
-        text = cls.normalize_whitespace(text)
-        text = cls.expand_abbreviations(text, lang)
-        text = cls.numbers_to_words(text, lang)
-        # Supprime les caractères de contrôle sauf retours à la ligne
-        text = "".join(ch for ch in text if ch == "\n" or ord(ch) >= 32)
-        return text.strip()
-
-    @classmethod
-    def to_ssml(cls, text: str, lang: str = "fr", rate: str = "medium", pitch: str = "medium") -> str:
-        """Génère un fragment SSML simple pour moteurs compatibles."""
-        escaped = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-        ssml = f'<speak xml:lang="{lang}">\n'
-        ssml += f'<prosody rate="{rate}" pitch="{pitch}">\n'
-        ssml += escaped
-        ssml += "\n</prosody>\n</speak>"
-        return ssml
-
-    @classmethod
-    def split_sentences(cls, text: str) -> List[str]:
-        """Découpe un texte en phrases."""
-        sentences = re.split(r"(?<=[.!?])\s+", text)
-        return [s.strip() for s in sentences if s.strip()]
-
-
-class PhonemeHelper:
-    """Fournit une conversion approximative texte -> phonèmes via espeak/phonemizer."""
-
-    @staticmethod
-    def is_available() -> bool:
-        return shutil.which("espeak") is not None or shutil.which("espeak-ng") is not None
-
-    @classmethod
-    def text_to_phonemes(cls, text: str, lang: str = "fr") -> str:
-        """Retourne une transcription phonétique approximative."""
-        try:
-            from phonemizer import phonemize
-            return phonemize(text, language=lang, backend="espeak")
-        except Exception:
+try:
+    from tqdm import tqdm
+except ImportError:
+    class tqdm:
+        def __init__(self, iterable=None, **kwargs):
+            self.iterable = iterable
+        def __iter__(self):
+            for x in self.iterable:
+                yield x
+        def update(self, n=1):
+            pass
+        def close(self):
             pass
 
-        binary = shutil.which("espeak-ng") or shutil.which("espeak")
-        if not binary:
-            return "[phonemizer non disponible]"
-        try:
-            import subprocess
-            result = subprocess.run(
-                [binary, "-v", lang, "-x", "--ipa", text],
-                capture_output=True,
-                text=True,
-                check=False,
-            )
-            return result.stdout.strip()
-        except Exception as exc:
-            return f"[erreur phonèmes: {exc}]"
+try:
+    import pyfiglet
+except ImportError:
+    pyfiglet = None
 
 
-# =============================================================================
-# 3. POST-TRAITEMENT AUDIO
-# =============================================================================
+# ═══════════════════════════════════════════════════════════════════════════════════
+# CONFIGURATION GLOBALE
+# ═══════════════════════════════════════════════════════════════════════════════════
+VERSION = "1.0.0"
+AUTHOR = "hackers_tchad"
+TITLE = "GEO3D MASTER"
+TAGLINES = [
+    "L'espace géométrique entre vos mains.",
+    "Visualisez, apprenez, créez en 3D.",
+    "La géométrie n'a plus de secrets.",
+    "Formes, lumières, perspectives vertes.",
+    "Explorez l'infini en trois dimensions.",
+]
 
-class AudioProcessor:
-    """Applique des effets audio sur des échantillons numpy."""
+SESSION_LOG = []
+SCENES = defaultdict(list)
+CAMERA_ENABLED = False
+CAMERA_SOURCE = None
 
-    def __init__(self, sample_rate: int = DEFAULT_SAMPLE_RATE):
-        self.sample_rate = sample_rate
+
+# ═══════════════════════════════════════════════════════════════════════════════════
+# UTILITAIRES D'AFFICHAGE
+# ═══════════════════════════════════════════════════════════════════════════════════
+def clear():
+    os.system('cls' if os.name == 'nt' else 'clear')
+
+
+def line(char="═", color=Fore.GREEN):
+    width = shutil.get_terminal_size().columns
+    print(color + char * width + Style.RESET_ALL)
+
+
+def center(text, color=Fore.GREEN):
+    width = shutil.get_terminal_size().columns
+    print(color + text.center(width) + Style.RESET_ALL)
+
+
+def banner():
+    clear()
+    if pyfiglet:
+        f = pyfiglet.Figlet(font='ogre')
+        art = f.renderText(TITLE)
+        print(Fore.GREEN + Style.BRIGHT + art)
+    else:
+        line("█", Fore.GREEN)
+        center("G E O 3 D   M A S T E R", Fore.GREEN + Style.BRIGHT)
+        line("█", Fore.GREEN)
+    center("Visualisation 3D Géométrique & Éducative", Fore.CYAN)
+    center(f"Version {VERSION} | Auteur: {AUTHOR}", Fore.YELLOW)
+    center(random.choice(TAGLINES), Fore.MAGENTA)
+    line()
+    center("⚠️  SIMULATEUR ÉDUCATIF UNIQUEMENT  ⚠️", Fore.RED + Back.BLACK)
+    line()
+
+
+def header(text):
+    print(f"\n{Fore.GREEN}{Style.BRIGHT}╔═ {text} ═{'═' * (70 - len(text))}╗{Style.RESET_ALL}")
+
+
+def info(text):
+    print(f"{Fore.CYAN}[ℹ] {text}{Style.RESET_ALL}")
+
+
+def success(text):
+    print(f"{Fore.GREEN}[✓] {text}{Style.RESET_ALL}")
+
+
+def warning(text):
+    print(f"{Fore.YELLOW}[!] {text}{Style.RESET_ALL}")
+
+
+def error(text):
+    print(f"{Fore.RED}[✗] {text}{Style.RESET_ALL}")
+
+
+def prompt(text):
+    return input(f"{Fore.GREEN}{Style.BRIGHT}[?] {text}{Style.RESET_ALL}").strip()
+
+
+def pause():
+    input(f"\n{Fore.YELLOW}Appuyez sur Entrée pour continuer...{Style.RESET_ALL}")
+
+
+def ts_iso():
+    return datetime.datetime.now().isoformat()
+
+
+def log_event(category, action, detail="", status="OK"):
+    entry = {
+        "timestamp": ts_iso(),
+        "category": category,
+        "action": action,
+        "detail": detail,
+        "status": status,
+    }
+    SESSION_LOG.append(entry)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════════
+# BARRES DE PROGRESSION & ANIMATIONS
+# ═══════════════════════════════════════════════════════════════════════════════════
+def progress(desc, total=100, min_sleep=0.005, max_sleep=0.02):
+    for _ in tqdm(range(total), desc=f"{Fore.GREEN}{desc}{Style.RESET_ALL}",
+                  bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt}"):
+        time.sleep(random.uniform(min_sleep, max_sleep))
+
+
+def steps_progress(prefix, steps):
+    for step in steps:
+        for _ in tqdm(range(100), desc=f"{Fore.CYAN}{prefix} {step}{Style.RESET_ALL}", leave=False,
+                      bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt}"):
+            time.sleep(random.uniform(0.003, 0.01))
+        success(f"{step} terminé.")
+
+
+def matrix_rain(duration=1.5):
+    chars = "01"
+    width = shutil.get_terminal_size().columns
+    end = time.time() + duration
+    while time.time() < end:
+        line = "".join(random.choice(chars) if random.random() > 0.80 else " " for _ in range(width))
+        print(Fore.GREEN + line + Style.RESET_ALL, end="\r")
+        time.sleep(0.05)
+    print()
+
+
+# ═══════════════════════════════════════════════════════════════════════════════════
+# MOTEUR 3D GÉOMÉTRIQUE DE BASE
+# ═══════════════════════════════════════════════════════════════════════════════════
+class Vec3:
+    def __init__(self, x=0.0, y=0.0, z=0.0):
+        self.x = float(x)
+        self.y = float(y)
+        self.z = float(z)
+
+    def __repr__(self):
+        return f"Vec3({self.x:.2f}, {self.y:.2f}, {self.z:.2f})"
+
+    def __add__(self, other):
+        return Vec3(self.x + other.x, self.y + other.y, self.z + other.z)
+
+    def __sub__(self, other):
+        return Vec3(self.x - other.x, self.y - other.y, self.z - other.z)
+
+    def __mul__(self, scalar):
+        return Vec3(self.x * scalar, self.y * scalar, self.z * scalar)
+
+    def dot(self, other):
+        return self.x * other.x + self.y * other.y + self.z * other.z
+
+    def cross(self, other):
+        return Vec3(
+            self.y * other.z - self.z * other.y,
+            self.z * other.x - self.x * other.z,
+            self.x * other.y - self.y * other.x,
+        )
+
+    def length(self):
+        return math.sqrt(self.x * self.x + self.y * self.y + self.z * self.z)
+
+    def normalize(self):
+        l = self.length()
+        if l == 0:
+            return Vec3(0, 0, 0)
+        return Vec3(self.x / l, self.y / l, self.z / l)
+
+    def to_tuple(self):
+        return (self.x, self.y, self.z)
+
+
+class Mat4:
+    def __init__(self, identity=False):
+        if identity:
+            self.m = [[1.0 if i == j else 0.0 for j in range(4)] for i in range(4)]
+        else:
+            self.m = [[0.0 for _ in range(4)] for _ in range(4)]
 
     @staticmethod
-    def to_float_array(audio_bytes: bytes, sample_width: int = 2) -> "np.ndarray":
-        """Convertit des bytes PCM en tableau float normalisé [-1, 1]."""
-        import numpy as np
-        if sample_width == 1:
-            data = np.frombuffer(audio_bytes, dtype=np.uint8).astype(np.float32)
-            data = (data - 128.0) / 128.0
-        elif sample_width == 2:
-            data = np.frombuffer(audio_bytes, dtype=np.int16).astype(np.float32)
-            data = data / 32768.0
-        else:
-            raise ValueError("sample_width non supporté (1 ou 2)")
-        return data
+    def identity():
+        return Mat4(identity=True)
 
     @staticmethod
-    def to_int16_bytes(data: "np.ndarray") -> bytes:
-        """Convertit un tableau float [-1, 1] en bytes PCM int16."""
-        import numpy as np
-        clipped = np.clip(data, -1.0, 1.0)
-        return (clipped * 32767.0).astype(np.int16).tobytes()
-
-    def normalize(self, data: "np.ndarray", target_db: float = -3.0) -> "np.ndarray":
-        """Normalise le niveau sonore RMS."""
-        import numpy as np
-        rms = np.sqrt(np.mean(data**2))
-        if rms == 0:
-            return data
-        current_db = 20 * np.log10(rms + 1e-12)
-        gain_db = target_db - current_db
-        gain = 10 ** (gain_db / 20.0)
-        return data * gain
-
-    def change_speed(self, data: "np.ndarray", factor: float) -> "np.ndarray":
-        """Change la vitesse sans modifier la hauteur (phase vocoder simplifié)."""
-        import numpy as np
-        from scipy import signal
-        if factor <= 0 or abs(factor - 1.0) < 0.01:
-            return data
-        # Méthode simple par resampling + conservation de pitch (approximation)
-        n = len(data)
-        new_n = int(n / factor)
-        resampled = signal.resample(data, new_n)
-        return resampled
-
-    def change_pitch(self, data: "np.ndarray", semitones: float) -> "np.ndarray":
-        """Change la hauteur en tons (via interpolation/resampling simplifié)."""
-        import numpy as np
-        from scipy import signal
-        if abs(semitones) < 0.1:
-            return data
-        factor = 2 ** (semitones / 12.0)
-        new_len = int(len(data) / factor)
-        return signal.resample(data, new_len)
-
-    def simple_eq(self, data: "np.ndarray") -> "np.ndarray":
-        """Égalisation simple : boost des fréquences vocales (~1-4 kHz)."""
-        import numpy as np
-        from scipy import signal
-        # Filtre passe-bande boosté (approximation)
-        sos = signal.butter(2, [300, 4000], btype="bandpass", fs=self.sample_rate, output="sos")
-        boosted = signal.sosfilt(sos, data) * 1.3
-        return np.clip(data + boosted * 0.3, -1.0, 1.0)
-
-    def trim_silence(self, data: "np.ndarray", threshold: float = 0.01) -> "np.ndarray":
-        """Supprime les silences au début et à la fin."""
-        import numpy as np
-        above = np.where(np.abs(data) > threshold)[0]
-        if above.size == 0:
-            return data
-        return data[above[0] : above[-1] + 1]
-
-    def apply_vad_trim(self, data: "np.ndarray", aggressiveness: int = 2) -> "np.ndarray":
-        """Utilise WebRTC VAD pour détecter et garder les segments vocaux."""
-        try:
-            import webrtcvad
-        except ImportError:
-            return self.trim_silence(data)
-
-        # WebRTC VAD nécessite du PCM 16 bits mono à 8000/16000/32000/48000 Hz
-        import numpy as np
-        import resampy
-
-        target_sr = 16000
-        resampled = resampy.resample(data, self.sample_rate, target_sr)
-        pcm = (np.clip(resampled, -1.0, 1.0) * 32767).astype(np.int16).tobytes()
-
-        vad = webrtcvad.Vad(aggressiveness)
-        frame_ms = 30
-        frame_len = int(target_sr * frame_ms / 1000) * 2
-        frames = [pcm[i : i + frame_len] for i in range(0, len(pcm), frame_len) if len(pcm[i : i + frame_len]) == frame_len]
-        voiced = [vad.is_speech(frame, target_sr) for frame in frames]
-
-        # Garder les segments voisés avec un peu de contexte
-        keep = []
-        for i, is_voiced in enumerate(voiced):
-            keep.append(is_voiced)
-        if not any(keep):
-            return data
-
-        # Reconstitution approximative
-        out_frames = [frames[i] for i, k in enumerate(keep) if k]
-        out_pcm = b"".join(out_frames)
-        out_data = np.frombuffer(out_pcm, dtype=np.int16).astype(np.float32) / 32768.0
-        return resampy.resample(out_data, target_sr, self.sample_rate)
-
-    def reverb(self, data: "np.ndarray", decay: float = 0.4, delay_ms: float = 60.0) -> "np.ndarray":
-        """Ajoute une réverbération simple par comb filter."""
-        import numpy as np
-        delay_samples = int(self.sample_rate * delay_ms / 1000.0)
-        out = np.zeros(len(data) + delay_samples, dtype=np.float32)
-        out[: len(data)] = data
-        for i in range(delay_samples, len(out)):
-            out[i] += out[i - delay_samples] * decay
-        return out[: len(data)]
-
-    def chorus(self, data: "np.ndarray", depth: float = 0.02, rate: float = 1.5) -> "np.ndarray":
-        """Effet chorus très léger."""
-        import numpy as np
-        t = np.arange(len(data)) / self.sample_rate
-        mod = depth * np.sin(2 * np.pi * rate * t)
-        delayed = np.interp(np.arange(len(data)) - mod * self.sample_rate, np.arange(len(data)), data)
-        return np.clip(data * 0.7 + delayed * 0.3, -1.0, 1.0)
-
-    def apply_effects(
-        self,
-        data: "np.ndarray",
-        effects: List[str],
-        speed: float = 1.0,
-        pitch: float = 0.0,
-    ) -> "np.ndarray":
-        """Applique une chaîne d'effets audio."""
-        if "normalize" in effects:
-            data = self.normalize(data)
-        if "eq" in effects:
-            data = self.simple_eq(data)
-        if abs(speed - 1.0) > 0.01 or "speed" in effects:
-            data = self.change_speed(data, speed)
-        if abs(pitch) > 0.1 or "pitch" in effects:
-            data = self.change_pitch(data, pitch)
-        if "reverb" in effects:
-            data = self.reverb(data)
-        if "chorus" in effects:
-            data = self.chorus(data)
-        if "vad_trim" in effects:
-            data = self.apply_vad_trim(data)
-        data = self.normalize(data)
-        return np.clip(data, -1.0, 1.0)
-
-
-# =============================================================================
-# 4. MOTEURS TTS
-# =============================================================================
-
-@dataclass
-class TTSEngineInfo:
-    """Métadonnées d'un moteur TTS."""
-    name: str
-    description: str
-    requires_internet: bool
-    supports_offline: bool
-    voices: List[str] = field(default_factory=list)
-
-
-class BaseTTSEngine:
-    """Classe de base pour tous les moteurs TTS."""
-
-    def __init__(self, lang: str = "fr", speed: float = 1.0, pitch: float = 0.0):
-        self.lang = lang
-        self.speed = speed
-        self.pitch = pitch
-
-    def synthesize(self, text: str, output_path: Optional[Path] = None) -> bytes:
-        """Génère de l'audio et retourne les bytes WAV/PCM."""
-        raise NotImplementedError
-
-    def list_voices(self) -> List[str]:
-        return []
-
-    def is_available(self) -> bool:
-        return True
-
-
-class Pyttsx3Engine(BaseTTSEngine):
-    """Moteur natif pyttsx3 (offline, utilise SAPI5/NSSpeechSynth/espeak)."""
-
-    def __init__(self, lang: str = "fr", speed: float = 1.0, pitch: float = 0.0, voice_id: Optional[str] = None):
-        super().__init__(lang, speed, pitch)
-        self.voice_id = voice_id
-        self._engine = None
-        self._voices: List[str] = []
-        self._init_engine()
-
-    def _init_engine(self):
-        try:
-            import pyttsx3
-            self._engine = pyttsx3.init()
-            self._engine.setProperty("rate", int(180 * self.speed))
-            voices = self._engine.getProperty("voices")
-            self._voices = [v.id for v in voices]
-            if self.voice_id and self.voice_id in self._voices:
-                self._engine.setProperty("voice", self.voice_id)
-            else:
-                # Sélectionne une voix correspondant à la langue
-                for v in voices:
-                    if self.lang[:2].lower() in (v.languages or "").lower() or self.lang[:2].lower() in v.id.lower():
-                        self._engine.setProperty("voice", v.id)
-                        break
-        except Exception as exc:
-            raise RuntimeError(f"pyttsx3 non disponible: {exc}")
-
-    def list_voices(self) -> List[str]:
-        return self._voices
-
-    def synthesize(self, text: str, output_path: Optional[Path] = None) -> bytes:
-        if self._engine is None:
-            raise RuntimeError("Moteur pyttsx3 non initialisé")
-        out_path = output_path or (TEMP_DIR / f"pyttsx3_{int(time.time()*1000)}.wav")
-        self._engine.save_to_file(text, str(out_path))
-        self._engine.runAndWait()
-        return out_path.read_bytes()
-
-    def is_available(self) -> bool:
-        return self._engine is not None
-
-
-class GTTSEngine(BaseTTSEngine):
-    """Moteur Google Translate TTS (online, gratuit, pas de clé API)."""
-
-    def synthesize(self, text: str, output_path: Optional[Path] = None) -> bytes:
-        try:
-            from gtts import gTTS
-        except ImportError as exc:
-            raise RuntimeError(f"gTTS non installé: {exc}")
-
-        # gTTS limite la taille des textes ~100 caractères par requête
-        max_len = 100
-        chunks = [text[i : i + max_len] for i in range(0, len(text), max_len)]
-        from pydub import AudioSegment
-
-        combined = AudioSegment.silent(duration=0)
-        for chunk in chunks:
-            tts = gTTS(text=chunk, lang=self.lang[:2], slow=(self.speed < 0.9))
-            mp3_fp = io.BytesIO()
-            tts.write_to_fp(mp3_fp)
-            mp3_fp.seek(0)
-            segment = AudioSegment.from_mp3(mp3_fp)
-            combined += segment
-
-        if output_path:
-            combined.export(str(output_path), format="wav")
-            return output_path.read_bytes()
-        buf = io.BytesIO()
-        combined.export(buf, format="wav")
-        return buf.getvalue()
-
-    def is_available(self) -> bool:
-        try:
-            import gtts
-            import requests
-            return True
-        except Exception:
-            return False
-
-
-class EspeakEngine(BaseTTSEngine):
-    """Moteur espeak/espeak-ng en ligne de commande (offline)."""
-
-    def synthesize(self, text: str, output_path: Optional[Path] = None) -> bytes:
-        binary = shutil.which("espeak-ng") or shutil.which("espeak")
-        if not binary:
-            raise RuntimeError("espeak/espeak-ng non installé")
-        out_path = output_path or (TEMP_DIR / f"espeak_{int(time.time()*1000)}.wav")
-        import subprocess
-
-        speed_wpm = int(175 * self.speed)
-        pitch_val = int(self.pitch * 10)
-        cmd = [
-            binary,
-            "-v", self.lang[:2],
-            "-s", str(speed_wpm),
-            "-p", str(pitch_val),
-            "-w", str(out_path),
-            text,
-        ]
-        subprocess.run(cmd, check=False, capture_output=True)
-        if not out_path.exists():
-            raise RuntimeError("espeak n'a pas généré de fichier audio")
-        return out_path.read_bytes()
-
-    def is_available(self) -> bool:
-        return shutil.which("espeak") is not None or shutil.which("espeak-ng") is not None
-
-
-class CoquiEngine(BaseTTSEngine):
-    """Moteur neuronal Coqui TTS (offline, modèles téléchargeables)."""
-
-    def __init__(self, lang: str = "fr", speed: float = 1.0, pitch: float = 0.0, model_name: Optional[str] = None):
-        super().__init__(lang, speed, pitch)
-        self.model_name = model_name
-        self._tts = None
-        self._init_model()
-
-    def _init_model(self):
-        try:
-            from TTS.api import TTS
-        except ImportError as exc:
-            raise RuntimeError(f"Coqui TTS non installé: {exc}")
-
-        # Sélection d'un modèle par défaut selon la langue
-        if self.model_name:
-            model = self.model_name
-        elif self.lang.startswith("fr"):
-            model = "tts_models/fr/css10/vits"
-        elif self.lang.startswith("en"):
-            model = "tts_models/en/ljspeech/tacotron2-DDC"
-        elif self.lang.startswith("es"):
-            model = "tts_models/es/css10/vits"
-        else:
-            model = "tts_models/en/ljspeech/tacotron2-DDC"
-
-        try:
-            self._tts = TTS(model).to("cpu")
-        except Exception as exc:
-            raise RuntimeError(f"Impossible de charger le modèle Coqui '{model}': {exc}")
-
-    def synthesize(self, text: str, output_path: Optional[Path] = None) -> bytes:
-        if self._tts is None:
-            raise RuntimeError("Modèle Coqui non initialisé")
-        out_path = output_path or (TEMP_DIR / f"coqui_{int(time.time()*1000)}.wav")
-        self._tts.tts_to_file(text=text, file_path=str(out_path))
-        return out_path.read_bytes()
-
-    def is_available(self) -> bool:
-        try:
-            from TTS.api import TTS
-            return True
-        except Exception:
-            return False
-
-
-class SystemEngine(BaseTTSEngine):
-    """Moteur système natif (macOS `say`, Linux `spd-say`, Windows SAPI via pyttsx3)."""
-
-    def synthesize(self, text: str, output_path: Optional[Path] = None) -> bytes:
-        system = platform.system().lower()
-        out_path = output_path or (TEMP_DIR / f"system_{int(time.time()*1000)}.wav")
-        import subprocess
-
-        if system == "darwin":
-            cmd = ["say", "-o", str(out_path), text]
-        elif system == "linux":
-            cmd = ["spd-say", "-w", "-o", str(out_path), text]
-        else:
-            # Fallback pyttsx3
-            engine = Pyttsx3Engine(self.lang, self.speed, self.pitch)
-            return engine.synthesize(text, out_path)
-
-        subprocess.run(cmd, check=False, capture_output=True)
-        if not out_path.exists():
-            raise RuntimeError("Le moteur système n'a pas généré de fichier audio")
-        return out_path.read_bytes()
-
-    def is_available(self) -> bool:
-        system = platform.system().lower()
-        if system == "darwin":
-            return shutil.which("say") is not None
-        if system == "linux":
-            return shutil.which("spd-say") is not None
-        return True
-
-
-# =============================================================================
-# 5. PIPELINE UNIFIÉE
-# =============================================================================
-
-class UltraVoiceTTS:
-    """Pipeline principal de synthèse vocale multi-moteurs."""
-
-    def __init__(self, lang: str = "fr", engine: str = ENGINE_PYTTSX3):
-        self.lang = lang
-        self.engine_name = engine
-        self.speed = 1.0
-        self.pitch = 0.0
-        self.effects: List[str] = ["normalize"]
-        self.voice_id: Optional[str] = None
-        self.model_name: Optional[str] = None
-        self._engine: Optional[BaseTTSEngine] = None
-        self._lock = Lock()
-        self._init_engine()
-
-    def _init_engine(self):
-        if self.engine_name == ENGINE_PYTTSX3:
-            self._engine = Pyttsx3Engine(self.lang, self.speed, self.pitch, self.voice_id)
-        elif self.engine_name == ENGINE_GTTS:
-            self._engine = GTTSEngine(self.lang, self.speed, self.pitch)
-        elif self.engine_name == ENGINE_ESPEAK:
-            self._engine = EspeakEngine(self.lang, self.speed, self.pitch)
-        elif self.engine_name == ENGINE_COQUI:
-            self._engine = CoquiEngine(self.lang, self.speed, self.pitch, self.model_name)
-        elif self.engine_name == ENGINE_SYSTEM:
-            self._engine = SystemEngine(self.lang, self.speed, self.pitch)
-        else:
-            raise ValueError(f"Moteur inconnu: {self.engine_name}")
-
-    def set_engine(self, engine: str):
-        with self._lock:
-            self.engine_name = engine
-            self._init_engine()
-
-    def set_voice(self, voice_id: str):
-        self.voice_id = voice_id
-        if self.engine_name == ENGINE_PYTTSX3:
-            self._init_engine()
-
-    def set_model(self, model_name: str):
-        self.model_name = model_name
-        if self.engine_name == ENGINE_COQUI:
-            self._init_engine()
-
-    def set_effects(self, effects: List[str]):
-        self.effects = list(effects)
-
-    def set_speed(self, speed: float):
-        self.speed = max(0.5, min(3.0, speed))
-        if hasattr(self._engine, "speed"):
-            self._engine.speed = self.speed
-
-    def set_pitch(self, pitch: float):
-        self.pitch = max(-12.0, min(12.0, pitch))
-        if hasattr(self._engine, "pitch"):
-            self._engine.pitch = self.pitch
-
-    def synthesize(
-        self,
-        text: str,
-        output_path: Optional[Union[str, Path]] = None,
-        apply_effects: bool = True,
-    ) -> Path:
-        """
-        Synthétise le texte et sauvegarde éventuellement le résultat.
-        Retourne le chemin du fichier WAV généré.
-        """
-        text = TextNormalizer.clean_text(text, self.lang)
-        if not text:
-            raise ValueError("Le texte est vide après normalisation")
-
-        with self._lock:
-            tmp_path = TEMP_DIR / f"uvtts_{int(time.time()*1000)}.wav"
-            raw_bytes = self._engine.synthesize(text, tmp_path)
-
-            if not tmp_path.exists():
-                # Certains moteurs retournent directement les bytes sans écrire
-                tmp_path.write_bytes(raw_bytes)
-
-            if apply_effects and self.effects:
-                self._apply_effects_to_file(tmp_path)
-
-            if output_path:
-                output_path = Path(output_path)
-                shutil.copy2(tmp_path, output_path)
-                return output_path
-            return tmp_path
-
-    def _apply_effects_to_file(self, wav_path: Path):
-        """Lit un WAV, applique les effets et réécrit."""
-        import numpy as np
-
-        try:
-            from pydub import AudioSegment
-        except ImportError:
-            return
-
-        seg = AudioSegment.from_wav(str(wav_path))
-        seg = seg.set_channels(1)
-        sample_width = seg.sample_width
-        sample_rate = seg.frame_rate
-        raw = seg.raw_data
-
-        processor = AudioProcessor(sample_rate)
-        data = processor.to_float_array(raw, sample_width)
-        data = processor.apply_effects(data, self.effects, self.speed, self.pitch)
-        processed_bytes = processor.to_int16_bytes(data)
-
-        new_seg = AudioSegment(
-            data=processed_bytes,
-            sample_width=2,
-            frame_rate=sample_rate,
-            channels=1,
-        )
-        new_seg.export(str(wav_path), format="wav")
-
-    def speak(self, text: str):
-        """Synthétise et joue immédiatement le texte."""
-        path = self.synthesize(text)
-        self.play_audio(path)
-
-    def save(self, text: str, output_path: Union[str, Path], format: str = "wav"):
-        """Sauvegarde la synthèse dans le format demandé."""
-        path = self.synthesize(text)
-        output_path = Path(output_path)
-        if format.lower() == "mp3":
-            from pydub import AudioSegment
-            seg = AudioSegment.from_wav(str(path))
-            seg.export(str(output_path), format="mp3", bitrate=DEFAULT_BITRATE)
-        elif format.lower() == "ogg":
-            from pydub import AudioSegment
-            seg = AudioSegment.from_wav(str(path))
-            seg.export(str(output_path), format="ogg")
-        else:
-            shutil.copy2(path, output_path)
-        return output_path
+    def translation(tx, ty, tz):
+        mat = Mat4.identity()
+        mat.m[0][3] = tx
+        mat.m[1][3] = ty
+        mat.m[2][3] = tz
+        return mat
 
     @staticmethod
-    def play_audio(path: Union[str, Path]):
-        """Joue un fichier audio de manière cross-platform."""
-        path = Path(path)
-        if not path.exists():
-            raise FileNotFoundError(path)
-
-        system = platform.system().lower()
-        import subprocess
-
-        if system == "darwin":
-            subprocess.run(["afplay", str(path)], check=False)
-        elif system == "linux":
-            # Essaye plusieurs lecteurs
-            for player in ["paplay", "aplay", "ffplay", "vlc"]:
-                if shutil.which(player):
-                    cmd = [player, str(path)]
-                    if player == "ffplay":
-                        cmd += ["-nodisp", "-autoexit", "-loglevel", "quiet"]
-                    elif player == "vlc":
-                        cmd += ["--play-and-exit", "--qt-start-minimized"]
-                    subprocess.run(cmd, check=False, capture_output=True)
-                    return
-            raise RuntimeError("Aucun lecteur audio trouvé")
-        elif system == "windows":
-            os.startfile(str(path))
-        else:
-            raise RuntimeError("Système non supporté pour la lecture audio")
-
-    def get_info(self) -> TTSEngineInfo:
-        return TTSEngineInfo(
-            name=self.engine_name,
-            description=self._engine.__class__.__doc__ or "",
-            requires_internet=(self.engine_name == ENGINE_GTTS),
-            supports_offline=(self.engine_name != ENGINE_GTTS),
-            voices=self._engine.list_voices(),
-        )
+    def rotation_x(angle):
+        mat = Mat4.identity()
+        c = math.cos(angle)
+        s = math.sin(angle)
+        mat.m[1][1] = c
+        mat.m[1][2] = -s
+        mat.m[2][1] = s
+        mat.m[2][2] = c
+        return mat
 
     @staticmethod
-    def available_engines() -> List[str]:
-        """Liste les moteurs disponibles sur ce système."""
-        available = []
-        for engine in ALL_ENGINES:
-            try:
-                if engine == ENGINE_PYTTSX3:
-                    import pyttsx3
-                    available.append(engine)
-                elif engine == ENGINE_GTTS:
-                    import gtts
-                    available.append(engine)
-                elif engine == ENGINE_ESPEAK:
-                    if shutil.which("espeak") or shutil.which("espeak-ng"):
-                        available.append(engine)
-                elif engine == ENGINE_COQUI:
-                    import TTS
-                    available.append(engine)
-                elif engine == ENGINE_SYSTEM:
-                    available.append(engine)
-            except Exception:
-                pass
-        return available
+    def rotation_y(angle):
+        mat = Mat4.identity()
+        c = math.cos(angle)
+        s = math.sin(angle)
+        mat.m[0][0] = c
+        mat.m[0][2] = s
+        mat.m[2][0] = -s
+        mat.m[2][2] = c
+        return mat
+
+    @staticmethod
+    def rotation_z(angle):
+        mat = Mat4.identity()
+        c = math.cos(angle)
+        s = math.sin(angle)
+        mat.m[0][0] = c
+        mat.m[0][1] = -s
+        mat.m[1][0] = s
+        mat.m[1][1] = c
+        return mat
+
+    @staticmethod
+    def scaling(sx, sy, sz):
+        mat = Mat4.identity()
+        mat.m[0][0] = sx
+        mat.m[1][1] = sy
+        mat.m[2][2] = sz
+        return mat
+
+    def multiply(self, other):
+        result = Mat4()
+        for i in range(4):
+            for j in range(4):
+                for k in range(4):
+                    result.m[i][j] += self.m[i][k] * other.m[k][j]
+        return result
+
+    def transform_vec3(self, v):
+        x = self.m[0][0] * v.x + self.m[0][1] * v.y + self.m[0][2] * v.z + self.m[0][3]
+        y = self.m[1][0] * v.x + self.m[1][1] * v.y + self.m[1][2] * v.z + self.m[1][3]
+        z = self.m[2][0] * v.x + self.m[2][1] * v.y + self.m[2][2] * v.z + self.m[2][3]
+        return Vec3(x, y, z)
 
 
-# =============================================================================
-# 6. INTERFACE GRAPHIQUE TKINTER AVANCÉE
-# =============================================================================
+# ═══════════════════════════════════════════════════════════════════════════════════
+# FORMES GÉOMÉTRIQUES 3D
+# ═══════════════════════════════════════════════════════════════════════════════════
+class Geometry3D:
+    def __init__(self, name="object"):
+        self.name = name
+        self.vertices = []
+        self.faces = []
+        self.color = "green"
+        self.position = Vec3()
+        self.rotation = Vec3()
+        self.scale = Vec3(1, 1, 1)
+        self.wireframe = False
 
-class UltraVoiceApp:
-    """Application Tkinter stylisée pour Ultra Voice TTS."""
+    def add_vertex(self, x, y, z):
+        self.vertices.append(Vec3(x, y, z))
 
-    BG_COLOR = "#1e1e2e"
-    FG_COLOR = "#cdd6f4"
-    ACCENT_COLOR = "#89b4fa"
-    SECONDARY_COLOR = "#313244"
-    SUCCESS_COLOR = "#a6e3a1"
-    WARNING_COLOR = "#f9e2af"
-    ERROR_COLOR = "#f38ba8"
-    FONT_FAMILY = "Segoe UI" if platform.system() == "Windows" else "Helvetica"
+    def add_face(self, indices):
+        self.faces.append(indices)
 
-    def __init__(self):
-        self.root = Tk()
-        self.root.title(f"{APP_NAME} v{APP_VERSION}")
-        self.root.geometry("1100x850")
-        self.root.configure(bg=self.BG_COLOR)
-        self.root.minsize(900, 700)
+    def transform(self):
+        t = Mat4.translation(self.position.x, self.position.y, self.position.z)
+        rx = Mat4.rotation_x(self.rotation.x)
+        ry = Mat4.rotation_y(self.rotation.y)
+        rz = Mat4.rotation_z(self.rotation.z)
+        s = Mat4.scaling(self.scale.x, self.scale.y, self.scale.z)
+        transform = t.multiply(rx).multiply(ry).multiply(rz).multiply(s)
+        return [transform.transform_vec3(v) for v in self.vertices]
 
-        self.tts = None
-        self.current_wav: Optional[Path] = None
-        self.is_playing = False
-        self.worker_queue: Queue = Queue()
-        self.worker_thread = Thread(target=self._worker_loop, daemon=True)
-        self.worker_thread.start()
+    def get_face_vertices(self):
+        transformed = self.transform()
+        return [[transformed[i] for i in face] for face in self.faces]
 
-        self._build_styles()
-        self._build_menu()
-        self._build_ui()
-        self._init_tts()
+    def center(self):
+        if not self.vertices:
+            return Vec3()
+        cx = sum(v.x for v in self.vertices) / len(self.vertices)
+        cy = sum(v.y for v in self.vertices) / len(self.vertices)
+        cz = sum(v.z for v in self.vertices) / len(self.vertices)
+        return Vec3(cx, cy, cz)
 
-    def _build_styles(self):
-        style = ttk.Style()
-        style.theme_use("clam")
-        style.configure(
-            "TFrame",
-            background=self.BG_COLOR,
-        )
-        style.configure(
-            "TLabel",
-            background=self.BG_COLOR,
-            foreground=self.FG_COLOR,
-            font=(self.FONT_FAMILY, 10),
-        )
-        style.configure(
-            "TButton",
-            background=self.ACCENT_COLOR,
-            foreground=self.BG_COLOR,
-            font=(self.FONT_FAMILY, 10, "bold"),
-            borderwidth=0,
-            relief="flat",
-        )
-        style.map(
-            "TButton",
-            background=[("active", "#74c7ec"), ("pressed", "#89b4fa")],
-        )
-        style.configure(
-            "TScale",
-            background=self.BG_COLOR,
-            troughcolor=self.SECONDARY_COLOR,
-            slidercolor=self.ACCENT_COLOR,
-        )
-        style.configure(
-            "TCombobox",
-            fieldbackground=self.SECONDARY_COLOR,
-            background=self.SECONDARY_COLOR,
-            foreground=self.FG_COLOR,
-        )
 
-    def _build_menu(self):
-        menubar = Menu(self.root, bg=self.SECONDARY_COLOR, fg=self.FG_COLOR, borderwidth=0)
-        file_menu = Menu(menubar, tearoff=0, bg=self.SECONDARY_COLOR, fg=self.FG_COLOR)
-        file_menu.add_command(label="Importer un texte", command=self._import_text)
-        file_menu.add_command(label="Exporter WAV", command=self._export_wav)
-        file_menu.add_command(label="Exporter MP3", command=self._export_mp3)
-        file_menu.add_separator()
-        file_menu.add_command(label="Quitter", command=self.root.quit)
-        menubar.add_cascade(label="Fichier", menu=file_menu)
+def create_cube(size=1.0):
+    geo = Geometry3D("cube")
+    s = size / 2.0
+    geo.add_vertex(-s, -s, -s)
+    geo.add_vertex(s, -s, -s)
+    geo.add_vertex(s, s, -s)
+    geo.add_vertex(-s, s, -s)
+    geo.add_vertex(-s, -s, s)
+    geo.add_vertex(s, -s, s)
+    geo.add_vertex(s, s, s)
+    geo.add_vertex(-s, s, s)
+    faces = [
+        [0, 1, 2, 3],
+        [4, 5, 6, 7],
+        [0, 1, 5, 4],
+        [2, 3, 7, 6],
+        [0, 3, 7, 4],
+        [1, 2, 6, 5],
+    ]
+    for f in faces:
+        geo.add_face(f)
+    return geo
 
-        help_menu = Menu(menubar, tearoff=0, bg=self.SECONDARY_COLOR, fg=self.FG_COLOR)
-        help_menu.add_command(label="Fiche ICMP... pardon, Fiche TTS", command=self._show_about)
-        help_menu.add_command(label="À propos", command=self._show_about)
-        menubar.add_cascade(label="Aide", menu=help_menu)
-        self.root.config(menu=menubar)
 
-    def _build_ui(self):
-        # === En-tête ===
-        header = Frame(self.root, bg=self.BG_COLOR)
-        header.pack(fill="x", padx=20, pady=(20, 10))
-        Label(
-            header,
-            text=f"{APP_NAME}",
-            bg=self.BG_COLOR,
-            fg=self.ACCENT_COLOR,
-            font=(self.FONT_FAMILY, 28, "bold"),
-        ).pack(side=LEFT)
-        Label(
-            header,
-            text=f"v{APP_VERSION} — Synthèse vocale avancée & gratuite",
-            bg=self.BG_COLOR,
-            fg=self.FG_COLOR,
-            font=(self.FONT_FAMILY, 11),
-        ).pack(side=LEFT, padx=(15, 0), pady=(10, 0))
+def create_pyramid(size=1.0):
+    geo = Geometry3D("pyramid")
+    s = size / 2.0
+    h = size
+    geo.add_vertex(0, h, 0)
+    geo.add_vertex(-s, 0, -s)
+    geo.add_vertex(s, 0, -s)
+    geo.add_vertex(s, 0, s)
+    geo.add_vertex(-s, 0, s)
+    faces = [
+        [0, 1, 2],
+        [0, 2, 3],
+        [0, 3, 4],
+        [0, 4, 1],
+        [1, 2, 3, 4],
+    ]
+    for f in faces:
+        geo.add_face(f)
+    return geo
 
-        # === Panneau principal ===
-        main_frame = Frame(self.root, bg=self.BG_COLOR)
-        main_frame.pack(fill=BOTH, expand=True, padx=20, pady=10)
 
-        # --- Colonne gauche : contrôles ---
-        left_frame = Frame(main_frame, bg=self.SECONDARY_COLOR, bd=0, relief="flat")
-        left_frame.pack(side=LEFT, fill=BOTH, expand=False, padx=(0, 15))
-        self._build_controls(left_frame)
+def create_sphere(radius=1.0, segments=16, rings=16):
+    geo = Geometry3D("sphere")
+    vertices = []
+    for r in range(rings + 1):
+        theta = math.pi * r / rings
+        for s in range(segments + 1):
+            phi = 2 * math.pi * s / segments
+            x = radius * math.sin(theta) * math.cos(phi)
+            y = radius * math.cos(theta)
+            z = radius * math.sin(theta) * math.sin(phi)
+            vertices.append(Vec3(x, y, z))
+            geo.add_vertex(x, y, z)
+    for r in range(rings):
+        for s in range(segments):
+            a = r * (segments + 1) + s
+            b = a + segments + 1
+            geo.add_face([a, b, b + 1, a + 1])
+    return geo
 
-        # --- Colonne droite : texte et logs ---
-        right_frame = Frame(main_frame, bg=self.BG_COLOR)
-        right_frame.pack(side=RIGHT, fill=BOTH, expand=True)
-        self._build_text_area(right_frame)
 
-        # === Barre de statut ===
-        self.status_var = StringVar(value="Prêt")
-        status_bar = Label(
-            self.root,
-            textvariable=self.status_var,
-            bg=self.SECONDARY_COLOR,
-            fg=self.FG_COLOR,
-            anchor="w",
-            font=(self.FONT_FAMILY, 9),
-            padx=10,
-            pady=5,
-        )
-        status_bar.pack(side=BOTTOM, fill="x")
+def create_torus(radius_major=1.0, radius_minor=0.3, segments_major=24, segments_minor=16):
+    geo = Geometry3D("torus")
+    for i in range(segments_major):
+        theta = 2 * math.pi * i / segments_major
+        for j in range(segments_minor):
+            phi = 2 * math.pi * j / segments_minor
+            x = (radius_major + radius_minor * math.cos(phi)) * math.cos(theta)
+            y = radius_minor * math.sin(phi)
+            z = (radius_major + radius_minor * math.cos(phi)) * math.sin(theta)
+            geo.add_vertex(x, y, z)
+    for i in range(segments_major):
+        for j in range(segments_minor):
+            a = i * segments_minor + j
+            b = ((i + 1) % segments_major) * segments_minor + j
+            c = ((i + 1) % segments_major) * segments_minor + (j + 1) % segments_minor
+            d = i * segments_minor + (j + 1) % segments_minor
+            geo.add_face([a, b, c, d])
+    return geo
 
-    def _build_controls(self, parent: Frame):
-        pad = {"padx": 15, "pady": 10}
 
-        # ===== Bouton principal de génération / lecture (EN HAUT) =====
-        gen_frame = Frame(parent, bg=self.SECONDARY_COLOR)
-        gen_frame.pack(fill="x", padx=15, pady=(15, 5))
-        self.speak_btn = Button(
-            gen_frame,
-            text="▶ GÉNÉRER & LIRE",
-            bg=self.SUCCESS_COLOR,
-            fg=self.BG_COLOR,
-            font=(self.FONT_FAMILY, 14, "bold"),
-            bd=0,
-            relief="flat",
-            height=2,
-            command=self._on_speak,
-        )
-        self.speak_btn.pack(fill="x", pady=5)
+def create_octahedron(size=1.0):
+    geo = Geometry3D("octahedron")
+    s = size
+    geo.add_vertex(s, 0, 0)
+    geo.add_vertex(-s, 0, 0)
+    geo.add_vertex(0, s, 0)
+    geo.add_vertex(0, -s, 0)
+    geo.add_vertex(0, 0, s)
+    geo.add_vertex(0, 0, -s)
+    faces = [
+        [0, 2, 4],
+        [0, 4, 3],
+        [0, 3, 5],
+        [0, 5, 2],
+        [1, 2, 5],
+        [1, 5, 3],
+        [1, 3, 4],
+        [1, 4, 2],
+    ]
+    for f in faces:
+        geo.add_face(f)
+    return geo
 
-        # Sous-boutons rapides
-        quick_frame = Frame(gen_frame, bg=self.SECONDARY_COLOR)
-        quick_frame.pack(fill="x")
-        self.save_btn = Button(
-            quick_frame,
-            text="💾 Sauver",
-            bg=self.ACCENT_COLOR,
-            fg=self.BG_COLOR,
-            font=(self.FONT_FAMILY, 10, "bold"),
-            bd=0,
-            relief="flat",
-            command=self._on_save,
-        )
-        self.save_btn.pack(side=LEFT, fill="x", expand=True, padx=(0, 5))
-        self.stop_btn = Button(
-            quick_frame,
-            text="⏹ Stop",
-            bg=self.ERROR_COLOR,
-            fg=self.BG_COLOR,
-            font=(self.FONT_FAMILY, 10, "bold"),
-            bd=0,
-            relief="flat",
-            command=self._on_stop,
-        )
-        self.stop_btn.pack(side=RIGHT, fill="x", expand=True, padx=(5, 0))
 
-        # Séparateur visuel
-        sep = Frame(parent, bg=self.BG_COLOR, height=2)
-        sep.pack(fill="x", padx=15, pady=10)
+def create_dodecahedron(size=1.0):
+    geo = Geometry3D("dodecahedron")
+    phi = (1 + math.sqrt(5)) / 2
+    s = size
+    points = [
+        (-1, -1, -1), (-1, -1, 1), (-1, 1, -1), (-1, 1, 1),
+        (1, -1, -1), (1, -1, 1), (1, 1, -1), (1, 1, 1),
+        (0, -1/phi, -phi), (0, -1/phi, phi), (0, 1/phi, -phi), (0, 1/phi, phi),
+        (-1/phi, -phi, 0), (-1/phi, phi, 0), (1/phi, -phi, 0), (1/phi, phi, 0),
+        (-phi, 0, -1/phi), (-phi, 0, 1/phi), (phi, 0, -1/phi), (phi, 0, 1/phi),
+    ]
+    for p in points:
+        geo.add_vertex(p[0] * s, p[1] * s, p[2] * s)
+    faces = [
+        [0, 8, 4, 14, 12],
+        [0, 12, 1, 17, 16],
+        [0, 16, 2, 10, 8],
+        [1, 9, 5, 19, 17],
+        [1, 12, 14, 5, 9],
+        [2, 11, 6, 10, 16],
+        [2, 17, 19, 6, 11],
+        [3, 13, 7, 11, 15],
+        [3, 15, 18, 4, 9],
+        [3, 9, 1, 17, 13],
+        [4, 18, 5, 14, 8],
+        [5, 19, 18, 15, 14],
+        [6, 19, 5, 18, 15],
+        [6, 10, 8, 4, 18],
+        [7, 13, 17, 19, 6],
+        [7, 11, 2, 16, 13],
+    ]
+    for f in faces:
+        geo.add_face(f)
+    return geo
 
-        # Moteur
-        Label(parent, text="Moteur TTS", bg=self.SECONDARY_COLOR, fg=self.ACCENT_COLOR, font=(self.FONT_FAMILY, 11, "bold")).pack(anchor="w", **pad)
-        self.engine_var = StringVar(value=ENGINE_PYTTSX3)
-        engines = UltraVoiceTTS.available_engines() or [ENGINE_GTTS]
-        engine_menu = ttk.OptionMenu(parent, self.engine_var, engines[0], *engines, command=self._on_engine_change)
-        engine_menu.pack(fill="x", **pad)
 
-        # Langue
-        Label(parent, text="Langue", bg=self.SECONDARY_COLOR, fg=self.ACCENT_COLOR, font=(self.FONT_FAMILY, 11, "bold")).pack(anchor="w", **pad)
-        self.lang_var = StringVar(value="fr")
-        lang_menu = ttk.OptionMenu(parent, self.lang_var, "fr", *list(GTTS_LANGUAGES.keys()), command=self._on_lang_change)
-        lang_menu.pack(fill="x", **pad)
+def create_icosahedron(size=1.0):
+    geo = Geometry3D("icosahedron")
+    phi = (1 + math.sqrt(5)) / 2
+    points = [
+        (0, 1, phi), (0, 1, -phi), (0, -1, phi), (0, -1, -phi),
+        (1, phi, 0), (1, -phi, 0), (-1, phi, 0), (-1, -phi, 0),
+        (phi, 0, 1), (phi, 0, -1), (-phi, 0, 1), (-phi, 0, -1),
+    ]
+    for p in points:
+        geo.add_vertex(p[0] * size, p[1] * size, p[2] * size)
+    faces = [
+        [0, 2, 8], [0, 8, 4], [0, 4, 6], [0, 6, 10], [0, 10, 2],
+        [3, 1, 9], [3, 9, 5], [3, 5, 7], [3, 7, 11], [3, 11, 1],
+        [1, 4, 9], [1, 6, 4], [1, 11, 6], [1, 9, 11],
+        [2, 5, 8], [2, 7, 5], [2, 10, 7], [2, 8, 10],
+        [4, 8, 9], [5, 9, 8], [6, 7, 11], [7, 6, 10],
+    ]
+    for f in faces:
+        geo.add_face(f)
+    return geo
 
-        # Voix
-        Label(parent, text="Voix / Modèle", bg=self.SECONDARY_COLOR, fg=self.ACCENT_COLOR, font=(self.FONT_FAMILY, 11, "bold")).pack(anchor="w", **pad)
-        self.voice_var = StringVar(value="Défaut")
-        self.voice_menu = ttk.OptionMenu(parent, self.voice_var, "Défaut", "Défaut")
-        self.voice_menu.pack(fill="x", **pad)
 
-        # Vitesse
-        Label(parent, text="Vitesse", bg=self.SECONDARY_COLOR, fg=self.ACCENT_COLOR, font=(self.FONT_FAMILY, 11, "bold")).pack(anchor="w", **pad)
-        self.speed_var = DoubleVar(value=1.0)
-        speed_scale = ttk.Scale(parent, from_=0.5, to=2.5, orient=HORIZONTAL, variable=self.speed_var, command=self._on_speed_change)
-        speed_scale.pack(fill="x", **pad)
-        self.speed_label = Label(parent, text="1.00x", bg=self.SECONDARY_COLOR, fg=self.FG_COLOR)
-        self.speed_label.pack(anchor="w", padx=15)
+def create_icosahedron_subdivided(size=1.0, subdivisions=2):
+    geo = create_icosahedron(size)
+    for _ in range(subdivisions):
+        new_faces = []
+        for face in geo.faces:
+            if len(face) == 3:
+                v0 = geo.vertices[face[0]]
+                v1 = geo.vertices[face[1]]
+                v2 = geo.vertices[face[2]]
+                a = len(geo.vertices)
+                m01 = ((v0 + v1) * 0.5).normalize() * size
+                m12 = ((v1 + v2) * 0.5).normalize() * size
+                m20 = ((v2 + v0) * 0.5).normalize() * size
+                geo.vertices.extend([m01, m12, m20])
+                new_faces.extend([
+                    [face[0], a, a + 2],
+                    [face[1], a + 1, a],
+                    [face[2], a + 2, a + 1],
+                    [a, a + 1, a + 2],
+                ])
+        geo.faces = new_faces
+    return geo
 
-        # Hauteur
-        Label(parent, text="Hauteur (semitons)", bg=self.SECONDARY_COLOR, fg=self.ACCENT_COLOR, font=(self.FONT_FAMILY, 11, "bold")).pack(anchor="w", **pad)
-        self.pitch_var = DoubleVar(value=0.0)
-        pitch_scale = ttk.Scale(parent, from_=-12, to=12, orient=HORIZONTAL, variable=self.pitch_var, command=self._on_pitch_change)
-        pitch_scale.pack(fill="x", **pad)
-        self.pitch_label = Label(parent, text="0 st", bg=self.SECONDARY_COLOR, fg=self.FG_COLOR)
-        self.pitch_label.pack(anchor="w", padx=15)
 
-        # Effets
-        Label(parent, text="Effets audio", bg=self.SECONDARY_COLOR, fg=self.ACCENT_COLOR, font=(self.FONT_FAMILY, 11, "bold")).pack(anchor="w", **pad)
-        self.effect_vars: Dict[str, BooleanVar] = {}
-        effects_frame = Frame(parent, bg=self.SECONDARY_COLOR)
-        effects_frame.pack(fill="x", **pad)
-        for key, label in EFFECTS.items():
-            var = BooleanVar(value=(key in ["normalize"]))
-            self.effect_vars[key] = var
-            cb = Checkbutton(
-                effects_frame,
-                text=label,
-                variable=var,
-                bg=self.SECONDARY_COLOR,
-                fg=self.FG_COLOR,
-                selectcolor=self.BG_COLOR,
-                activebackground=self.SECONDARY_COLOR,
-                activeforeground=self.FG_COLOR,
-                anchor="w",
-            )
-            cb.pack(fill="x", padx=5, pady=2)
+# ═══════════════════════════════════════════════════════════════════════════════════
+# SCÈNE 3D
+# ═══════════════════════════════════════════════════════════════════════════════════
+class Scene3D:
+    def __init__(self, name="default"):
+        self.name = name
+        self.objects = []
+        self.camera_pos = Vec3(5, 5, 5)
+        self.camera_target = Vec3(0, 0, 0)
+        self.camera_up = Vec3(0, 1, 0)
+        self.fov = 60
+        self.near = 0.1
+        self.far = 100.0
+        self.light_pos = Vec3(10, 10, 10)
+        self.background_color = "black"
 
-    def _build_text_area(self, parent: Frame):
-        Label(parent, text="Texte à synthétiser", bg=self.BG_COLOR, fg=self.ACCENT_COLOR, font=(self.FONT_FAMILY, 12, "bold"), anchor="w").pack(fill="x", pady=(0, 10))
+    def add(self, obj):
+        self.objects.append(obj)
 
-        text_frame = Frame(parent, bg=self.BG_COLOR)
-        text_frame.pack(fill=BOTH, expand=True)
+    def remove(self, name):
+        self.objects = [o for o in self.objects if o.name != name]
 
-        scrollbar = Scrollbar(text_frame)
-        scrollbar.pack(side=RIGHT, fill="y")
-
-        self.text_area = Text(
-            text_frame,
-            wrap="word",
-            bg=self.SECONDARY_COLOR,
-            fg=self.FG_COLOR,
-            insertbackground=self.FG_COLOR,
-            font=(self.FONT_FAMILY, 12),
-            padx=10,
-            pady=10,
-            bd=0,
-            relief="flat",
-            yscrollcommand=scrollbar.set,
-        )
-        self.text_area.pack(side=LEFT, fill=BOTH, expand=True)
-        scrollbar.config(command=self.text_area.yview)
-
-        self.text_area.insert(END, "Bonjour et bienvenue dans Ultra Voice TTS. Cette interface vous permet de convertir du texte en parole de manière avancée, gratuite et sans clé API.")
-
-        # Logs
-        Label(parent, text="Journal", bg=self.BG_COLOR, fg=self.ACCENT_COLOR, font=(self.FONT_FAMILY, 12, "bold"), anchor="w").pack(fill="x", pady=(15, 10))
-        self.log_area = scrolledtext.ScrolledText(
-            parent,
-            wrap="word",
-            bg=self.SECONDARY_COLOR,
-            fg=self.FG_COLOR,
-            font=("Consolas", 9),
-            height=8,
-            padx=10,
-            pady=10,
-            bd=0,
-            relief="flat",
-            state=DISABLED,
-        )
-        self.log_area.pack(fill=BOTH, expand=False)
-
-    def _log(self, message: str, level: str = "info"):
-        color = self.FG_COLOR
-        if level == "success":
-            color = self.SUCCESS_COLOR
-        elif level == "warning":
-            color = self.WARNING_COLOR
-        elif level == "error":
-            color = self.ERROR_COLOR
-
-        self.log_area.config(state=NORMAL)
-        self.log_area.insert(END, f"[{time.strftime('%H:%M:%S')}] {message}\n")
-        self.log_area.tag_config(level, foreground=color)
-        self.log_area.tag_add(level, f"{self.log_area.index('end-2c linestart')}", f"{self.log_area.index('end-2c lineend')}")
-        self.log_area.config(state=DISABLED)
-        self.log_area.see(END)
-
-    def _init_tts(self):
-        try:
-            self.tts = UltraVoiceTTS(lang=self.lang_var.get(), engine=self.engine_var.get())
-            self._refresh_voices()
-            self._log(f"Moteur initialisé: {self.engine_var.get()}", "success")
-        except Exception as exc:
-            self._log(f"Erreur initialisation TTS: {exc}", "error")
-            self.tts = None
-
-    def _refresh_voices(self):
-        if self.tts is None:
+    def list_objects(self):
+        if not self.objects:
+            warning("La scène est vide.")
             return
-        try:
-            info = self.tts.get_info()
-            voices = info.voices or ["Défaut"]
-            menu = self.voice_menu["menu"]
-            menu.delete(0, END)
-            for v in voices:
-                menu.add_command(label=v, command=lambda val=v: self.voice_var.set(val))
-            self.voice_var.set(voices[0])
-        except Exception as exc:
-            self._log(f"Impossible de lister les voix: {exc}", "warning")
+        for idx, obj in enumerate(self.objects, 1):
+            print(f"  {Fore.CYAN}[{idx}]{Style.RESET_ALL} {obj.name} | pos={obj.position} | faces={len(obj.faces)}")
 
-    def _on_engine_change(self, value: str):
-        self.status_var.set(f"Changement moteur: {value}...")
-        self.root.update_idletasks()
-        try:
-            self.tts = UltraVoiceTTS(lang=self.lang_var.get(), engine=value)
-            self._refresh_voices()
-            self._log(f"Moteur activé: {value}", "success")
-        except Exception as exc:
-            self._log(f"Moteur {value} indisponible: {exc}", "error")
-            self.tts = None
-        self.status_var.set("Prêt")
+    def rotate_all(self, rx=0.0, ry=0.0, rz=0.0):
+        for obj in self.objects:
+            obj.rotation.x += rx
+            obj.rotation.y += ry
+            obj.rotation.z += rz
 
-    def _on_lang_change(self, value: str):
-        if self.tts:
-            self.tts.lang = value
-            self._log(f"Langue changée: {GTTS_LANGUAGES.get(value, value)}", "info")
-
-    def _on_speed_change(self, value: str):
-        speed = float(value)
-        self.speed_label.config(text=f"{speed:.2f}x")
-        if self.tts:
-            self.tts.set_speed(speed)
-
-    def _on_pitch_change(self, value: str):
-        pitch = float(value)
-        self.pitch_label.config(text=f"{pitch:.0f} st")
-        if self.tts:
-            self.tts.set_pitch(pitch)
-
-    def _get_selected_effects(self) -> List[str]:
-        return [key for key, var in self.effect_vars.items() if var.get()]
-
-    def _get_text(self) -> str:
-        return self.text_area.get("1.0", END).strip()
-
-    def _on_speak(self):
-        text = self._get_text()
-        if not text:
-            messagebox.showwarning("Texte vide", "Veuillez saisir du texte à synthétiser.")
+    def animate_rotation(self, steps=60, delay=0.05):
+        if plt is None or np is None:
+            error("matplotlib et numpy sont requis pour l'animation 3D.")
             return
-        if self.tts is None:
-            messagebox.showerror("Erreur", "Aucun moteur TTS disponible.")
-            return
+        fig = plt.figure(figsize=(10, 8))
+        ax = fig.add_subplot(111, projection='3d')
+        for _ in range(steps):
+            ax.clear()
+            ax.set_facecolor('black')
+            ax.set_title('GEO3D MASTER - Animation Verte', color='green')
+            self.rotate_all(0.05, 0.1, 0.02)
+            render_scene_to_axes(self, ax, animated=True)
+            plt.pause(delay)
+        plt.close()
 
-        self.status_var.set("Synthèse en cours...")
-        self._log(f"Synthèse de {len(text)} caractères avec {self.engine_var.get()}", "info")
-        self.worker_queue.put(("speak", text))
 
-    def _on_save(self):
-        text = self._get_text()
-        if not text:
-            messagebox.showwarning("Texte vide", "Veuillez saisir du texte à synthétiser.")
-            return
-        if self.tts is None:
-            messagebox.showerror("Erreur", "Aucun moteur TTS disponible.")
-            return
+# ═══════════════════════════════════════════════════════════════════════════════════
+# RENDU MATPLOTLIB
+# ═══════════════════════════════════════════════════════════════════════════════════
+def render_scene_to_axes(scene, ax, animated=False):
+    if np is None:
+        return
+    ax.set_xlabel('X', color='green')
+    ax.set_ylabel('Y', color='green')
+    ax.set_zlabel('Z', color='green')
+    ax.tick_params(colors='green')
+    all_x, all_y, all_z = [], [], []
+    for obj in scene.objects:
+        faces = obj.get_face_vertices()
+        for face in faces:
+            xs = [v.x for v in face]
+            ys = [v.y for v in face]
+            zs = [v.z for v in face]
+            all_x.extend(xs)
+            all_y.extend(ys)
+            all_z.extend(zs)
+            verts = [list(zip(xs, ys, zs))]
+            poly3d = Poly3DCollection(verts, alpha=0.6, facecolor=obj.color, edgecolor='lime', linewidth=0.5)
+            ax.add_collection3d(poly3d)
+    if all_x:
+        margin = 1.5
+        ax.set_xlim(min(all_x) - margin, max(all_x) + margin)
+        ax.set_ylim(min(all_y) - margin, max(all_y) + margin)
+        ax.set_zlim(min(all_z) - margin, max(all_z) + margin)
+    if not animated:
+        plt.show()
 
-        path = filedialog.asksaveasfilename(
-            defaultextension=".wav",
-            filetypes=[("Fichiers WAV", "*.wav"), ("Fichiers MP3", "*.mp3"), ("Tous fichiers", "*.*")],
+
+def render_scene(scene):
+    if plt is None or np is None:
+        error("matplotlib et numpy sont requis. Installez : pip install matplotlib numpy")
+        return
+    header(f"Rendu 3D : {scene.name}")
+    progress("Génération de la scène", total=50)
+    fig = plt.figure(figsize=(12, 9))
+    fig.patch.set_facecolor('black')
+    ax = fig.add_subplot(111, projection='3d')
+    ax.set_facecolor('black')
+    ax.set_title('GEO3D MASTER - Espace Géométrique', color='green', fontsize=16)
+    render_scene_to_axes(scene, ax)
+    log_event("RENDER", "scene", scene.name)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════════
+# CAMÉRA (OPTIONNELLE ET EXPLICITE)
+# ═══════════════════════════════════════════════════════════════════════════════════
+def check_camera():
+    global CAMERA_ENABLED, CAMERA_SOURCE
+    try:
+        import cv2
+        CAMERA_SOURCE = cv2
+        CAMERA_ENABLED = True
+        success("Caméra détectée. Activation possible via le menu.")
+        log_event("CAMERA", "detected")
+    except ImportError:
+        CAMERA_ENABLED = False
+        warning("OpenCV non installé. Mode caméra désactivé.")
+        log_event("CAMERA", "not_available")
+
+
+def camera_preview(duration=5):
+    global CAMERA_ENABLED, CAMERA_SOURCE
+    if not CAMERA_ENABLED or CAMERA_SOURCE is None:
+        warning("Caméra non disponible. Affichage d'une géométrie de remplacement.")
+        show_face_geometry()
+        return
+    header("Aperçu caméra (consentement requis)")
+    consent = prompt("Activer la caméra temporairement ? (oui/non) : ").lower()
+    if consent not in ("oui", "o", "yes", "y"):
+        info("Caméra non activée.")
+        return
+    cap = CAMERA_SOURCE.VideoCapture(0)
+    if not cap.isOpened():
+        error("Impossible d'ouvrir la caméra.")
+        return
+    info(f"Aperçu pendant {duration} secondes...")
+    start = time.time()
+    while time.time() - start < duration:
+        ret, frame = cap.read()
+        if not ret:
+            break
+        cv2.imshow('GEO3D MASTER - Camera Preview', frame)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+    cap.release()
+    cv2.destroyAllWindows()
+    success("Aperçu caméra terminé.")
+    log_event("CAMERA", "preview", f"duration={duration}")
+
+
+def show_face_geometry():
+    header("Géométrie faciale simulée (sans caméra)")
+    progress("Construction du maillage facial", total=80)
+    scene = Scene3D("face_geometry")
+    # Créer une représentation géométrique stylisée de visage
+    head = create_sphere(1.5, 12, 12)
+    head.color = "darkgreen"
+    head.position = Vec3(0, 0, 0)
+    eye1 = create_sphere(0.2, 8, 8)
+    eye1.color = "lime"
+    eye1.position = Vec3(-0.5, 0.4, 1.2)
+    eye2 = create_sphere(0.2, 8, 8)
+    eye2.color = "lime"
+    eye2.position = Vec3(0.5, 0.4, 1.2)
+    nose = create_pyramid(0.4)
+    nose.color = "green"
+    nose.position = Vec3(0, 0, 1.3)
+    mouth = create_torus(0.4, 0.05, 16, 8)
+    mouth.color = "lime"
+    mouth.position = Vec3(0, -0.5, 1.2)
+    scene.add(head)
+    scene.add(eye1)
+    scene.add(eye2)
+    scene.add(nose)
+    scene.add(mouth)
+    success("Géométrie faciale générée.")
+    render_scene(scene)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════════
+# SCÈNES PRÉDÉFINIES
+# ═══════════════════════════════════════════════════════════════════════════════════
+def scene_geometric_universe():
+    scene = Scene3D("geometric_universe")
+    cube = create_cube(1.5)
+    cube.color = "forestgreen"
+    cube.position = Vec3(-2, 0, 0)
+    sphere = create_sphere(1.0, 16, 16)
+    sphere.color = "limegreen"
+    sphere.position = Vec3(2, 0, 0)
+    pyramid = create_pyramid(1.5)
+    pyramid.color = "darkgreen"
+    pyramid.position = Vec3(0, 2, 0)
+    torus = create_torus(1.0, 0.3, 24, 16)
+    torus.color = "green"
+    torus.position = Vec3(0, -2, 0)
+    octa = create_octahedron(1.0)
+    octa.color = "springgreen"
+    octa.position = Vec3(0, 0, 2)
+    scene.add(cube)
+    scene.add(sphere)
+    scene.add(pyramid)
+    scene.add(torus)
+    scene.add(octa)
+    return scene
+
+
+def scene_platonic_solids():
+    scene = Scene3D("platonic_solids")
+    positions = [
+        (Vec3(-3, 0, 0), "tetra"),
+        (Vec3(-1.5, 0, 0), "cube"),
+        (Vec3(0, 0, 0), "octa"),
+        (Vec3(1.5, 0, 0), "dodeca"),
+        (Vec3(3, 0, 0), "icosa"),
+    ]
+    creators = {
+        "tetra": create_pyramid,
+        "cube": create_cube,
+        "octa": create_octahedron,
+        "dodeca": create_dodecahedron,
+        "icosa": create_icosahedron,
+    }
+    colors = ["lime", "green", "darkgreen", "forestgreen", "springgreen"]
+    for (pos, key), color in zip(positions, colors):
+        obj = creators[key](0.8)
+        obj.color = color
+        obj.position = pos
+        scene.add(obj)
+    return scene
+
+
+def scene_molecular():
+    scene = Scene3D("molecular")
+    center_atom = create_sphere(1.0, 16, 16)
+    center_atom.color = "green"
+    scene.add(center_atom)
+    for i in range(6):
+        angle = 2 * math.pi * i / 6
+        atom = create_sphere(0.4, 12, 12)
+        atom.color = "lime"
+        atom.position = Vec3(math.cos(angle) * 2, math.sin(angle) * 2, 0)
+        scene.add(atom)
+        bond = create_cube(0.1)
+        bond.color = "darkgreen"
+        bond.position = Vec3(math.cos(angle), math.sin(angle), 0)
+        bond.scale = Vec3(20, 1, 1)
+        bond.rotation.z = angle
+        scene.add(bond)
+    return scene
+
+
+def scene_galaxy():
+    scene = Scene3D("galaxy")
+    for i in range(200):
+        angle = random.uniform(0, 2 * math.pi)
+        radius = random.uniform(0.5, 5)
+        star = create_sphere(random.uniform(0.03, 0.1), 6, 6)
+        star.color = random.choice(["green", "lime", "springgreen", "palegreen"])
+        star.position = Vec3(
+            math.cos(angle) * radius,
+            random.uniform(-0.5, 0.5),
+            math.sin(angle) * radius,
         )
-        if not path:
+        scene.add(star)
+    return scene
+
+
+# ═══════════════════════════════════════════════════════════════════════════════════
+# GÉNÉRATEURS PROCÉDURAUX
+# ═══════════════════════════════════════════════════════════════════════════════════
+def generate_terrain(size=10, resolution=30):
+    scene = Scene3D("terrain")
+    step = size / resolution
+    for i in range(resolution):
+        for j in range(resolution):
+            x = -size / 2 + i * step
+            z = -size / 2 + j * step
+            y = math.sin(x) * math.cos(z) * 0.5 + random.uniform(-0.1, 0.1)
+            block = create_cube(step * 0.9)
+            block.color = "green"
+            block.position = Vec3(x, y, z)
+            block.scale.y = 0.2 + abs(y)
+            scene.add(block)
+    return scene
+
+
+def generate_fractal_tree(depth=4, length=2.0, angle=0.5):
+    scene = Scene3D("fractal_tree")
+    def branch(pos, direction, depth, length):
+        if depth == 0:
             return
-        self.status_var.set("Sauvegarde en cours...")
-        self._log(f"Export vers: {path}", "info")
-        self.worker_queue.put(("save", text, Path(path)))
-
-    def _on_stop(self):
-        self.status_var.set("Arrêt demandé")
-        self._log("Arrêt (lecture continue jusqu'à la fin du buffer courant)", "warning")
-
-    def _worker_loop(self):
-        while True:
-            try:
-                task = self.worker_queue.get(timeout=1)
-            except Empty:
-                continue
-
-            try:
-                if task[0] == "speak":
-                    _, text = task
-                    if self.tts is None:
-                        continue
-                    self.tts.set_effects(self._get_selected_effects())
-                    self.current_wav = self.tts.synthesize(text)
-                    self.root.after(0, lambda: self.status_var.set("Lecture en cours..."))
-                    UltraVoiceTTS.play_audio(self.current_wav)
-                    self.root.after(0, lambda: self.status_var.set("Prêt"))
-                    self.root.after(0, lambda: self._log("Lecture terminée", "success"))
-                elif task[0] == "save":
-                    _, text, path = task
-                    if self.tts is None:
-                        continue
-                    self.tts.set_effects(self._get_selected_effects())
-                    fmt = "mp3" if str(path).lower().endswith(".mp3") else "wav"
-                    self.tts.save(text, path, format=fmt)
-                    self.root.after(0, lambda p=path: self._log(f"Fichier sauvegardé: {p}", "success"))
-                    self.root.after(0, lambda: self.status_var.set("Prêt"))
-            except Exception as exc:
-                err = f"{exc}\n{traceback.format_exc()}"
-                self.root.after(0, lambda e=err: self._log(e, "error"))
-                self.root.after(0, lambda: self.status_var.set("Erreur"))
-
-    def _import_text(self):
-        path = filedialog.askopenfilename(filetypes=[("Fichiers texte", "*.txt"), ("Tous fichiers", "*.*")])
-        if path:
-            try:
-                content = Path(path).read_text(encoding="utf-8")
-                self.text_area.delete("1.0", END)
-                self.text_area.insert(END, content)
-                self._log(f"Texte importé: {path}", "success")
-            except Exception as exc:
-                self._log(f"Erreur import: {exc}", "error")
-
-    def _export_wav(self):
-        self._on_save()
-
-    def _export_mp3(self):
-        text = self._get_text()
-        if not text or self.tts is None:
-            return
-        path = filedialog.asksaveasfilename(defaultextension=".mp3", filetypes=[("Fichiers MP3", "*.mp3")])
-        if path:
-            self.worker_queue.put(("save", text, Path(path)))
-
-    def _show_about(self):
-        messagebox.showinfo(
-            "À propos",
-            f"{APP_NAME} v{APP_VERSION}\n\n"
-            "Synthèse vocale avancée, multi-moteurs et sans clé API.\n\n"
-            "Moteurs supportés : pyttsx3, gTTS, espeak, Coqui TTS, système natif.\n"
-            "Effets audio : normalisation, VAD, égalisation, vitesse, hauteur, réverb, chorus.",
-        )
-
-    def run(self):
-        self.root.mainloop()
+        end = pos + direction * length
+        cyl = create_cube(0.1)
+        cyl.color = "green"
+        mid = (pos + end) * 0.5
+        cyl.position = mid
+        cyl.scale = Vec3(1, length * 5, 1)
+        cyl.rotation.x = math.atan2(direction.z, direction.y)
+        cyl.rotation.z = math.atan2(direction.x, direction.y)
+        scene.add(cyl)
+        branch(end, direction + Vec3(angle, 0.5, 0).normalize(), depth - 1, length * 0.7)
+        branch(end, direction + Vec3(-angle, 0.5, 0).normalize(), depth - 1, length * 0.7)
+    branch(Vec3(0, -2, 0), Vec3(0, 1, 0), depth, length)
+    return scene
 
 
-# =============================================================================
-# 7. POINT D'ENTRÉE
-# =============================================================================
+def generate_spiral_tower(height=10, segments=40):
+    scene = Scene3D("spiral_tower")
+    for i in range(segments):
+        t = i / segments
+        angle = t * 4 * math.pi
+        radius = 1 + t * 2
+        y = -height / 2 + t * height
+        obj = create_cube(0.5)
+        obj.color = random.choice(["green", "lime", "springgreen"])
+        obj.position = Vec3(math.cos(angle) * radius, y, math.sin(angle) * radius)
+        obj.rotation.y = angle
+        scene.add(obj)
+    return scene
 
+
+def generate_wireframe_sphere(radius=2.0, segments=24):
+    scene = Scene3D("wireframe_sphere")
+    sphere = create_sphere(radius, segments, segments)
+    sphere.color = "green"
+    sphere.wireframe = True
+    scene.add(sphere)
+    return scene
+
+
+# ═══════════════════════════════════════════════════════════════════════════════════
+# TRANSFORMATIONS & UTILITAIRES 3D
+# ═══════════════════════════════════════════════════════════════════════════════════
+def apply_transform_menu(obj):
+    header("Transformation de l'objet")
+    print(f"  Position actuelle : {obj.position}")
+    print(f"  Rotation actuelle : {obj.rotation}")
+    print(f"  Échelle actuelle  : {obj.scale}")
+    tx = prompt("Translation X : ") or "0"
+    ty = prompt("Translation Y : ") or "0"
+    tz = prompt("Translation Z : ") or "0"
+    rx = prompt("Rotation X (degrés) : ") or "0"
+    ry = prompt("Rotation Y (degrés) : ") or "0"
+    rz = prompt("Rotation Z (degrés) : ") or "0"
+    sx = prompt("Échelle X : ") or "1"
+    sy = prompt("Échelle Y : ") or "1"
+    sz = prompt("Échelle Z : ") or "1"
+    try:
+        obj.position += Vec3(float(tx), float(ty), float(tz))
+        obj.rotation += Vec3(math.radians(float(rx)), math.radians(float(ry)), math.radians(float(rz)))
+        obj.scale = Vec3(float(sx), float(sy), float(sz))
+        success("Transformation appliquée.")
+        log_event("TRANSFORM", "apply", obj.name)
+    except ValueError:
+        error("Valeurs numériques invalides.")
+
+
+def calculate_distance(v1, v2):
+    return (v1 - v2).length()
+
+
+def calculate_volume_cube(size):
+    return size ** 3
+
+
+def calculate_volume_sphere(radius):
+    return (4 / 3) * math.pi * radius ** 3
+
+
+def calculate_surface_area_sphere(radius):
+    return 4 * math.pi * radius ** 2
+
+
+# ═══════════════════════════════════════════════════════════════════════════════════
+# MENUS ET INTERFACE
+# ═══════════════════════════════════════════════════════════════════════════════════
+MAIN_MENU = [
+    ("🏠 Scènes prédéfinies", "scene_menu"),
+    ("🔧 Créer un objet géométrique", "create_menu"),
+    ("🎨 Générateurs procéduraux", "procedural_menu"),
+    ("📐 Transformations & calculs", "transform_menu"),
+    ("🎥 Animation automatique", "animation_menu"),
+    ("📷 Caméra / Géométrie faciale", "camera_menu"),
+    ("📄 Rapports & informations", "report_menu"),
+    ("🌧 Animation Matrix", "matrix_animation"),
+    ("❌ Quitter", "exit"),
+]
+
+
+def scene_menu():
+    header("Scènes prédéfinies")
+    print("  [1] Univers géométrique")
+    print("  [2] Solides platoniciens")
+    print("  [3] Structure moléculaire")
+    print("  [4] Galaxie verte")
+    c = prompt("Choix : ")
+    scenes = {
+        "1": scene_geometric_universe,
+        "2": scene_platonic_solids,
+        "3": scene_molecular,
+        "4": scene_galaxy,
+    }
+    if c in scenes:
+        scene = scenes[c]()
+        render_scene(scene)
+        log_event("SCENE", "load", scene.name)
+    else:
+        error("Choix invalide.")
+
+
+def create_menu():
+    header("Créer un objet géométrique")
+    print("  [1] Cube")
+    print("  [2] Sphère")
+    print("  [3] Pyramide")
+    print("  [4] Torus")
+    print("  [5] Octaèdre")
+    print("  [6] Dodécaèdre")
+    print("  [7] Icosaèdre")
+    print("  [8] Icosaèdre subdivisé")
+    c = prompt("Choix : ")
+    size = prompt("Taille / Rayon : ") or "1"
+    try:
+        size = float(size)
+    except ValueError:
+        size = 1.0
+    creators = {
+        "1": lambda: create_cube(size),
+        "2": lambda: create_sphere(size, 16, 16),
+        "3": lambda: create_pyramid(size),
+        "4": lambda: create_torus(size, size * 0.3),
+        "5": lambda: create_octahedron(size),
+        "6": lambda: create_dodecahedron(size),
+        "7": lambda: create_icosahedron(size),
+        "8": lambda: create_icosahedron_subdivided(size, 1),
+    }
+    if c in creators:
+        obj = creators[c]()
+        obj.color = "green"
+        scene = Scene3D("custom_object")
+        scene.add(obj)
+        render_scene(scene)
+        log_event("CREATE", "object", obj.name)
+    else:
+        error("Choix invalide.")
+
+
+def procedural_menu():
+    header("Générateurs procéduraux")
+    print("  [1] Terrain 3D")
+    print("  [2] Arbre fractal")
+    print("  [3] Tour spirale")
+    print("  [4] Sphère filaire")
+    c = prompt("Choix : ")
+    if c == "1":
+        scene = generate_terrain()
+    elif c == "2":
+        scene = generate_fractal_tree()
+    elif c == "3":
+        scene = generate_spiral_tower()
+    elif c == "4":
+        scene = generate_wireframe_sphere()
+    else:
+        error("Choix invalide.")
+        return
+    render_scene(scene)
+    log_event("PROCEDURAL", "generate", scene.name)
+
+
+def transform_menu():
+    header("Transformations & calculs")
+    print("  [1] Distance entre deux points")
+    print("  [2] Volume d'un cube")
+    print("  [3] Volume d'une sphère")
+    print("  [4] Surface d'une sphère")
+    print("  [5] Info sur les vecteurs")
+    c = prompt("Choix : ")
+    if c == "1":
+        x1 = float(prompt("X1 : ") or "0")
+        y1 = float(prompt("Y1 : ") or "0")
+        z1 = float(prompt("Z1 : ") or "0")
+        x2 = float(prompt("X2 : ") or "1")
+        y2 = float(prompt("Y2 : ") or "1")
+        z2 = float(prompt("Z2 : ") or "1")
+        d = calculate_distance(Vec3(x1, y1, z1), Vec3(x2, y2, z2))
+        success(f"Distance : {d:.4f}")
+    elif c == "2":
+        s = float(prompt("Côté : ") or "1")
+        success(f"Volume : {calculate_volume_cube(s):.4f}")
+    elif c == "3":
+        r = float(prompt("Rayon : ") or "1")
+        success(f"Volume : {calculate_volume_sphere(r):.4f}")
+    elif c == "4":
+        r = float(prompt("Rayon : ") or "1")
+        success(f"Surface : {calculate_surface_area_sphere(r):.4f}")
+    elif c == "5":
+        v1 = Vec3(1, 2, 3)
+        v2 = Vec3(4, 5, 6)
+        info(f"v1 = {v1}")
+        info(f"v2 = {v2}")
+        info(f"v1 + v2 = {v1 + v2}")
+        info(f"v1 · v2 = {v1.dot(v2)}")
+        info(f"v1 × v2 = {v1.cross(v2)}")
+    else:
+        error("Choix invalide.")
+
+
+def animation_menu():
+    header("Animation automatique")
+    scene = scene_geometric_universe()
+    info("Animation en cours... Fermez la fenêtre matplotlib pour continuer.")
+    scene.animate_rotation(steps=60, delay=0.05)
+    log_event("ANIMATION", "rotation", scene.name)
+
+
+def camera_menu():
+    header("Caméra / Géométrie faciale")
+    print("  [1] Aperçu caméra (avec consentement)")
+    print("  [2] Géométrie faciale simulée (sans caméra)")
+    print("  [3] Vérifier la disponibilité caméra")
+    c = prompt("Choix : ")
+    if c == "1":
+        camera_preview()
+    elif c == "2":
+        show_face_geometry()
+    elif c == "3":
+        check_camera()
+    else:
+        error("Choix invalide.")
+
+
+def report_menu():
+    header("Rapports & informations")
+    print("  [1] Sauvegarder rapport JSON")
+    print("  [2] Informations système")
+    print("  [3] Afficher les événements")
+    c = prompt("Choix : ")
+    if c == "1":
+        filename = f"geo3d_report_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        data = {
+            "generated_at": ts_iso(),
+            "version": VERSION,
+            "author": AUTHOR,
+            "events": SESSION_LOG,
+            "camera_enabled": CAMERA_ENABLED,
+        }
+        with open(filename, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+        success(f"Rapport sauvegardé : {filename}")
+        log_event("REPORT", "save", filename)
+    elif c == "2":
+        info(f"OS : {os.name}")
+        info(f"Machine : {socket.gethostname()}")
+        info(f"Python : {sys.version.split()[0]}")
+        info(f"GEO3D Master : {VERSION}")
+        info(f"Caméra disponible : {CAMERA_ENABLED}")
+    elif c == "3":
+        for e in SESSION_LOG[-20:]:
+            print(f"  [{e['timestamp'][:19]}] {e['category']} | {e['action']} | {e['detail']}")
+    else:
+        error("Choix invalide.")
+
+
+def matrix_animation():
+    header("Animation Matrix")
+    matrix_rain(duration=3.0)
+    success("Animation terminée.")
+
+
+def auto_setup():
+    info("Initialisation automatique de GEO3D Master...")
+    progress("Chargement du moteur 3D", total=100)
+    check_camera()
+    success("Initialisation terminée.")
+    log_event("SYSTEM", "auto_setup")
+
+
+# ═══════════════════════════════════════════════════════════════════════════════════
+# BOUCLE PRINCIPALE
+# ═══════════════════════════════════════════════════════════════════════════════════
 def main():
-    parser = argparse.ArgumentParser(
-        prog="ultra_voice_tts.py",
-        description=f"{APP_NAME} v{APP_VERSION} — Synthèse vocale avancée en ligne de commande.",
-    )
-    parser.add_argument("--gui", action="store_true", help="Lancer l'interface graphique")
-    parser.add_argument("--speak", "-s", type=str, help="Texte à lire")
-    parser.add_argument("--save", type=str, help="Chemin de sortie WAV/MP3")
-    parser.add_argument("--engine", "-e", choices=ALL_ENGINES, default=ENGINE_PYTTSX3, help="Moteur TTS")
-    parser.add_argument("--lang", "-l", default="fr", help="Code langue")
-    parser.add_argument("--speed", type=float, default=1.0, help="Vitesse (0.5 - 2.5)")
-    parser.add_argument("--pitch", type=float, default=0.0, help="Hauteur en semitons (-12 à 12)")
-    parser.add_argument("--voice", type=str, help="Identifiant de voix (pyttsx3)")
-    parser.add_argument("--model", type=str, help="Nom du modèle Coqui TTS")
-    parser.add_argument(
-        "--effects",
-        nargs="+",
-        choices=list(EFFECTS.keys()),
-        default=["normalize"],
-        help="Effets audio à appliquer",
-    )
+    parser = argparse.ArgumentParser(description="GEO3D Master - Visualisation 3D géométrique")
+    parser.add_argument("--auto", action="store_true", help="Lancer automatiquement")
+    parser.add_argument("--scene", type=str, default="", help="Nom de scène à charger")
     args = parser.parse_args()
 
-    if args.gui or (not args.speak and not args.save):
-        app = UltraVoiceApp()
-        app.run()
-        return 0
+    banner()
+    auto_setup()
 
-    tts = UltraVoiceTTS(lang=args.lang, engine=args.engine)
-    tts.set_speed(args.speed)
-    tts.set_pitch(args.pitch)
-    if args.voice:
-        tts.set_voice(args.voice)
-    if args.model:
-        tts.set_model(args.model)
-    tts.set_effects(args.effects)
+    if args.scene:
+        scenes = {
+            "universe": scene_geometric_universe,
+            "platonic": scene_platonic_solids,
+            "molecular": scene_molecular,
+            "galaxy": scene_galaxy,
+        }
+        if args.scene in scenes:
+            render_scene(scenes[args.scene]())
 
-    if args.speak:
-        tts.speak(args.speak)
-    if args.save:
-        fmt = "mp3" if args.save.lower().endswith(".mp3") else "wav"
-        tts.save(args.save, args.save, format=fmt)
-        print(f"Audio sauvegardé: {args.save}")
+    while True:
+        banner()
+        print(f"\n{Fore.GREEN}{Style.BRIGHT}═══ MENU PRINCIPAL GEO3D MASTER ═══{Style.RESET_ALL}\n")
+        for idx, (label, _) in enumerate(MAIN_MENU, 1):
+            print(f"  {Fore.CYAN}[{idx}]{Style.RESET_ALL} {label}")
 
-    return 0
+        choice = prompt("Choix : ")
+
+        if choice == "9" or choice.lower() in ("quit", "exit", "q"):
+            info("Fermeture de GEO3D Master. À bientôt dans l'espace !")
+            log_event("SYSTEM", "shutdown", "user_exit")
+            sys.exit(0)
+
+        try:
+            idx = int(choice) - 1
+            if 0 <= idx < len(MAIN_MENU):
+                action = MAIN_MENU[idx][1]
+                if action == "scene_menu":
+                    scene_menu()
+                elif action == "create_menu":
+                    create_menu()
+                elif action == "procedural_menu":
+                    procedural_menu()
+                elif action == "transform_menu":
+                    transform_menu()
+                    pause()
+                elif action == "animation_menu":
+                    animation_menu()
+                elif action == "camera_menu":
+                    camera_menu()
+                elif action == "report_menu":
+                    report_menu()
+                elif action == "matrix_animation":
+                    matrix_animation()
+                    pause()
+            else:
+                error("Choix invalide.")
+                time.sleep(0.5)
+        except ValueError:
+            error("Entrée invalide.")
+            time.sleep(0.5)
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\n")
+        warning("Interruption par l'utilisateur. Au revoir !")
+        log_event("SYSTEM", "shutdown", "keyboard_interrupt")
+        sys.exit(0)
